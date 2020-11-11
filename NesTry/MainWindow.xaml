@@ -1,0 +1,13 @@
+﻿<Window x:Class="NesTry.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:NesTry"
+        mc:Ignorable="d"
+        Title="NES"  Height="400" Width="400" Focusable="True" KeyUp ="Window_KeyUp" KeyDown="Window_KeyDown" Closing="Window_Closing">
+        <Viewbox Stretch="Fill" >
+        <Canvas Name="GameArea"  ClipToBounds="false" IsHitTestVisible="false"  Width="256" Height="240" >
+               </Canvas>
+        </Viewbox>
+</Window>
