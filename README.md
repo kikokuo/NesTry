@@ -5,6 +5,8 @@ Nes,emulation,famicom,任天堂模擬器,C#
 開發環境 visual studio 2019 community
 C# .net core 3.1 WPF專案
 
+特別注意 目前只完成 MMC00版本的ROM 實作
+
 使用WPF原生元件 畫出畫面 所以最高只能60FPS WPF限制
 使用cscore專案 來輸出聲音 使用Xaudio2:2.8版
 
