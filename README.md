@@ -1,5 +1,5 @@
 # NesTry
-Nes,emulation,famicom,任天堂模擬器,C#
+C#,Nes,emulation,famicom,任天堂模擬器
 
 個人學習模擬器的專案  
 開發環境 visual studio 2019 community
