@@ -29,7 +29,7 @@ namespace NesTest
         [TestMethod]
         public void CheckNesHead()
         {
-            Assert.IsTrue(famicom.m_nesrom.ReadRom());
+            Assert.AreEqual(famicom.m_nesrom.ReadRom(),Fc_error_code.FC_ERROR_OK);
         }
         [TestMethod]
         public void CPU_init()

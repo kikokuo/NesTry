@@ -223,7 +223,7 @@ namespace NesTry
             // 重置mapper
             if (!m_mapper.Reset(ref this.prg_banks,ref m_ppu.m_banks, this.m_nesrom.m_romInfo)) return false;
             if (!m_cpu.Reset()) return false;
-            Fc_Setup_NameTable_Bank();
+            //Fc_Setup_NameTable_Bank();
             m_ppu.Reset();
             m_apu.Reset();
             return true;
@@ -797,6 +797,8 @@ namespace NesTry
                 
                 for (; cpu_cycle_count < end_cycle_count_this_round;)
                     m_nes6502.Fc_cpu_execute_one();
+
+                m_mapper.Hsync();
                 index_buffer += 256;
                 if(i% 66 == 65)
                 m_apu.sfc_trigger_frame_counter();

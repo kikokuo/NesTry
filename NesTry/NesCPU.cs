@@ -469,7 +469,8 @@ namespace NesTry
                 case 6:
                 case 7:
                     // 高一位為1, [$8000, $10000) 程序PRG-ROM區
-                    m_famicom.prg_banks[address >> 13][address & (UInt16)0x1fff] = data;
+                    m_famicom.m_mapper.Write_high_address(address, data);
+                    //m_famicom.prg_banks[address >> 13][address & (UInt16)0x1fff] = data;
                     return;
             }
         }
