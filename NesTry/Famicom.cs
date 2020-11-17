@@ -79,10 +79,6 @@ namespace NesTry
         public byte [] m_PRG3Memory;
         public byte [] m_PRG4Memory;
         public List<byte []>prg_banks;
-        // 顯存
-        public byte [] m_video_memory;
-        // 4屏用額外顯存
-        public byte [] m_video_memory_ex;
 
         // 手柄序列狀態#1
         public UInt16 button_index_1;
@@ -126,8 +122,6 @@ namespace NesTry
 
         public Famicom()
         {
-            m_video_memory = new byte[2048];
-            m_video_memory_ex = new byte[2048];
             prg_banks = new List<byte[]>();
             m_mainMemory = new byte[2048];
             prg_banks.Add(m_mainMemory);
@@ -146,13 +140,13 @@ namespace NesTry
             m_PRG4Memory = new byte[8192];
             prg_banks.Add(m_PRG4Memory);
             cpu_cycle_count = 0;
-            m_mapper = new RomMapper();
             Famicom famicom = this;
             m_ppu = new NesPPU();
             m_cpu = new NesCPU(ref famicom, ref m_ppu);
             m_nes6502 = new Nes6502(ref m_cpu);
             m_apu = new NesAPU(ref m_nes6502);
-            m_audio = new NesXAudio2();
+            m_audio = new NesXAudio2();  
+            m_mapper = new RomMapper();
 
             //key mapping table
             button_key_map.Add(Key.J, 0);
@@ -191,7 +185,7 @@ namespace NesTry
             // 重置mapper
             if (!m_mapper.Reset(ref this.prg_banks,ref m_ppu.m_banks, this.m_nesrom.m_romInfo)) return false;
             if (!m_cpu.Reset()) return false;
-            m_ppu.Reset(ref m_video_memory,ref m_video_memory_ex,this.m_nesrom.m_romInfo);
+            m_ppu.Reset(this.m_nesrom.m_romInfo);
             m_apu.Reset();
             return true;
         }
@@ -203,7 +197,7 @@ namespace NesTry
                 return false;
             m_mapper = null;
             m_mapper = new RomMapper();
-            if (m_mapper.LoadMapper(ref prg_banks, ref m_ppu.m_banks, m_nesrom.m_romInfo) != Fc_error_code.FC_ERROR_OK)
+            if (m_mapper.LoadMapper(ref m_ppu,ref prg_banks, ref m_ppu.m_banks, m_nesrom.m_romInfo) != Fc_error_code.FC_ERROR_OK)
                 return false;
             return true;
         }

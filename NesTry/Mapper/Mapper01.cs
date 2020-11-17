@@ -22,9 +22,11 @@ namespace NesTry.Mapper
         private List<byte[]> mapper01_prg_banks;
         private RomInfo mapper01_RomInfo;
         private List<byte[]> mapper01_ppu_banks;
-        public Mapper01()
+        private NesPPU m_ppu;
+        public Mapper01(ref NesPPU ppu)
         {
             mapper01.shifter = 0x10;
+            m_ppu = ppu;
         }
         public bool Reset(ref List<byte[]> prg_banks, ref List<byte[]> ppu_banks, RomInfo romInfo)
         {
@@ -78,7 +80,8 @@ namespace NesTry.Mapper
         {
             mapper01.control = data;
             // D0D1 - 鏡像模式
-            //sfc_switch_nametable_mirroring(data & 0x3);
+            nametable_mirroring_mode foo = (nametable_mirroring_mode)Enum.ToObject(typeof(nametable_mirroring_mode), data & 0x3);
+            m_ppu.Switch_Nametable_Mirroring(foo);
             // D2D3 - PRG ROM bank 模式
             mapper01.prmode = (byte)((data >> 2) & 0x3);
             // D5 - CHR ROM bank 模式

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace NesTry
 {
-     enum nametable_mirroring_mode
+    public enum nametable_mirroring_mode
     {
         SFC_NT_MIR_SingleLow = 0,
         SFC_NT_MIR_SingleHigh,
@@ -16,7 +16,8 @@ namespace NesTry
     public class RomMapper
     {
         public MapperBase mapperbase;
-        public Fc_error_code LoadMapper(ref List<byte[]> prg_banks, ref List<byte[]> ppu_banks, RomInfo romInfo)
+ 
+        public Fc_error_code LoadMapper(ref NesPPU ppu, ref List<byte[]> prg_banks, ref List<byte[]> ppu_banks, RomInfo romInfo)
         {
             switch(romInfo.mapper_number)
             {
@@ -24,7 +25,7 @@ namespace NesTry
                     mapperbase = new Mapper00();
                     return Fc_error_code.FC_ERROR_OK;
                 case 1:
-                    mapperbase = new Mapper01();
+                    mapperbase = new Mapper01(ref ppu);
                     return Fc_error_code.FC_ERROR_OK;
             }
             return Fc_error_code.FC_ERROR_MAPPER_NOT_FOUND;

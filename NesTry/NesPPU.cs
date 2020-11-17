@@ -92,6 +92,14 @@ namespace NesTry
         // 精靈數據: 256B
         public byte[] m_sprites;
 
+        // 顯存
+        public byte[] m_video_memory_1;
+
+        public byte[] m_video_memory_2;
+        // 4屏用額外顯存
+        public byte[] m_video_memory_ex_1;
+        public byte[] m_video_memory_ex_2;
+
         public Fc_Palette_Data [] fc_stdpalette = new Fc_Palette_Data[64]{
     new Fc_Palette_Data( 0x7F, 0x7F, 0x7F, 0xFF), new Fc_Palette_Data( 0x20, 0x00, 0xB0, 0xFF), new Fc_Palette_Data( 0x28, 0x00, 0xB8, 0xFF), new Fc_Palette_Data( 0x60, 0x10, 0xA0, 0xFF),
     new Fc_Palette_Data( 0x98, 0x20, 0x78, 0xFF), new Fc_Palette_Data( 0xB0, 0x10, 0x30, 0xFF), new Fc_Palette_Data( 0xA0, 0x30, 0x00, 0xFF), new Fc_Palette_Data( 0x78, 0x40, 0x00, 0xFF),
@@ -119,6 +127,10 @@ namespace NesTry
             m_banks = new List<byte[]>();
             for(int i = 0;i < 8;i++)
                 m_banks.Add(new byte[1024]);
+            m_video_memory_1= new byte[1024];
+            m_video_memory_2 = new byte[1024];
+            m_video_memory_ex_1 = new byte[1024];
+            m_video_memory_ex_2 = new byte[1024];
             m_spindexes = new byte[0x20];
             m_sprites = new byte[0x100];
             m_ctrl = 0;
@@ -129,9 +141,9 @@ namespace NesTry
         }
         public void Clear()
         {
-            foreach(var v in m_banks){
-                Array.Clear(v, 0, 1024);
-            }
+            m_banks.Clear();
+            for (int i = 0; i < 8; i++)
+                m_banks.Add(new byte[1024]);
             Array.Clear(m_spindexes, 0, 0x20);
             Array.Clear(m_sprites, 0, 0x100);
             m_ctrl = 0;
@@ -140,52 +152,50 @@ namespace NesTry
             m_oamaddr = 0;
             m_pseudo = 0;
         }
-        public void Reset(ref byte []  video_memory, ref byte []  video_memory_ex,RomInfo romInfo)
+        public void Reset(RomInfo romInfo)
         {
-            Setup_Nametable_Bank(ref video_memory,ref video_memory_ex, romInfo);
-            Array.Copy(m_banks[0x8], 0, m_banks[0xc], 0, 1024);
-            Array.Copy(m_banks[0x9], 0, m_banks[0xd], 0, 1024);
-            Array.Copy(m_banks[0xa], 0, m_banks[0xe], 0, 1024);
-            Array.Copy(m_banks[0xb], 0, m_banks[0xf], 0, 1024);
+            Setup_Nametable_Bank(romInfo);
         }
         /// <summary>
         /// SFCs the switch nametable mirroring.
         /// </summary>
         /// <param name="famicom">The famicom.</param>
         /// <param name="mode">The mode.</param>
-        private void Switch_Nametable_Mirroring(ref byte[] video_memory, ref byte[] video_memory_ex, nametable_mirroring_mode mode)
+        public void Switch_Nametable_Mirroring(nametable_mirroring_mode mode)
         {
+            if(m_banks.Count >= 16)
+            m_banks.RemoveRange(8, 8);
             switch (mode)
             {
                 case nametable_mirroring_mode.SFC_NT_MIR_SingleLow:
-                    m_banks.Add(video_memory);
-                    m_banks.Add(video_memory);
-                    m_banks.Add(video_memory);
-                    m_banks.Add(video_memory);
+                    m_banks.Add(m_video_memory_1);
+                    m_banks.Add(m_video_memory_1);
+                    m_banks.Add(m_video_memory_1);
+                    m_banks.Add(m_video_memory_1);
                     break;
                 case nametable_mirroring_mode.SFC_NT_MIR_SingleHigh:
-                    m_banks.Add(video_memory);
-                    m_banks.Add(video_memory);
-                    m_banks.Add(video_memory);
-                    m_banks.Add(video_memory); ;
+                    m_banks.Add(m_video_memory_2);
+                    m_banks.Add(m_video_memory_2);
+                    m_banks.Add(m_video_memory_2);
+                    m_banks.Add(m_video_memory_2); ;
                     break;
                 case nametable_mirroring_mode.SFC_NT_MIR_Vertical:
-                    m_banks.Add(video_memory);
-                    m_banks.Add(video_memory);
-                    m_banks.Add(video_memory);
-                    m_banks.Add(video_memory);
+                    m_banks.Add(m_video_memory_1);
+                    m_banks.Add(m_video_memory_2);
+                    m_banks.Add(m_video_memory_1);
+                    m_banks.Add(m_video_memory_2);
                     break;
                 case nametable_mirroring_mode.SFC_NT_MIR_Horizo​​ntal:
-                    m_banks.Add(video_memory);
-                    m_banks.Add(video_memory);
-                    m_banks.Add(video_memory);
-                    m_banks.Add(video_memory);
+                    m_banks.Add(m_video_memory_1);
+                    m_banks.Add(m_video_memory_1);
+                    m_banks.Add(m_video_memory_2);
+                    m_banks.Add(m_video_memory_2);
                     break;
                 case nametable_mirroring_mode.SFC_NT_MIR_FourScreen:
-                    m_banks.Add(video_memory);
-                    m_banks.Add(video_memory);
-                    m_banks.Add(video_memory_ex);
-                    m_banks.Add(video_memory_ex);
+                    m_banks.Add(m_video_memory_1);
+                    m_banks.Add(m_video_memory_2);
+                    m_banks.Add(m_video_memory_ex_1);
+                    m_banks.Add(m_video_memory_ex_2);
                     break;
             }
             // 鏡像
@@ -198,9 +208,9 @@ namespace NesTry
         /// StepFC: 設置名稱表用倉庫
         /// </summary>
         /// <param name="famicom">The famicom.</param>
-        private void Setup_Nametable_Bank(ref byte[] video_memory, ref byte[] video_memory_ex, RomInfo romInfo)
+        private void Setup_Nametable_Bank(RomInfo romInfo)
         {
-            Switch_Nametable_Mirroring(ref video_memory,ref video_memory_ex,
+            Switch_Nametable_Mirroring(
                 romInfo.four_screen ? (nametable_mirroring_mode.SFC_NT_MIR_FourScreen) :
                 (romInfo.vmirroring ? nametable_mirroring_mode.SFC_NT_MIR_Vertical : nametable_mirroring_mode.SFC_NT_MIR_Horizontal)
             );
