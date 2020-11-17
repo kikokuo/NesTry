@@ -56,8 +56,14 @@ namespace NesTry
         public byte y_index;
         // 棧指針 Stack Pointer
         public byte stack_pointer;
-        // 保留對齊用
-        public byte unused;
+        // IRQ中斷計數器
+        public byte irq_counter;
+        // IRQ中斷標誌
+        public byte irq_flag;
+        // IRQ處理中
+        public byte irq_in_process;
+        // NMI處理中
+        public byte nmi_in_process;
     };
     public class NesCPU
     {
@@ -136,6 +142,7 @@ namespace NesTry
             // 清除中斷標記
             m_famicom.m_apu.frame_interrupt = 0;
 
+            m_famicom.m_nes6502.O_IRQ_ack();
             // TODO: DMC
             return state;
         }
@@ -311,7 +318,7 @@ namespace NesTry
                 case 0x10:
                 case 0x12:
                 case 0x13:
-                    Debug.Assert(true,"NOT IMPL");
+                    //Debug.Assert(true,"NOT IMPL");
                     break;
                 case 0x14:
                     // 精靈RAM直接儲存器訪問
@@ -357,7 +364,7 @@ namespace NesTry
                     if ((data & (byte)Fc_4017_flag.FC_APU4017_IRQDisable) > 0)
                         m_famicom.m_apu.frame_interrupt = 0;
                     // 5步模式會立刻產生一個時鐘信號
-                    if ((m_famicom.m_apu.frame_counter & (byte)Fc_4017_flag.FC_APU4017_ModeStep5) > 0)
+                    if ((data & (byte)Fc_4017_flag.FC_APU4017_ModeStep5) > 0)
                     {
                         m_famicom.m_apu.sfc_clock_length_counter_and_sweep_unit();
                         m_famicom.m_apu.sfc_clock_envelopes_and_linear_counter();
@@ -407,8 +414,8 @@ namespace NesTry
                     // 高三位為2, [$4000, $6000): pAPU寄存器 擴展ROM區
                     if (address < 0x4020)
                         return Read_cpu_address4020(address);
-                    else 
-                        Debug.Assert(true, "NOT IMPL");
+                    //else 
+                    //    Debug.Assert(true, "NOT IMPL");
                     return 0;
             case 3:
                 // 高三位為3, [$6000, $8000): 存檔 SRAM區

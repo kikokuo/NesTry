@@ -306,7 +306,7 @@ namespace NesTry
             if ((frame_counter & (byte)Fc_4017_flag.FC_APU4017_IRQDisable) > 0) return;
             frame_interrupt = 1;
             // TODO: 正確觸發IRQ
-            m_6502.O_IRQ();
+            m_6502.O_IRQ_try();
         }
 
 

@@ -154,7 +154,7 @@ namespace NesTry
                 {0x10,new DelegateOP(A_REL, O_BPL)},
                 {0x11,new DelegateOP(A_INY, O_ORA)},
                 {0x12,new DelegateOP(A_UNK, O_UNK)},
-                {0x13,new DelegateOP(A_INY, O_SLO)},
+                {0x13,new DelegateOP(A_iny, O_SLO)},
                 {0x14,new DelegateOP(A_ZPX, O_NOP)},
                 {0x15,new DelegateOP(A_ZPX, O_ORA)},
                 {0x16,new DelegateOP(A_ZPX, O_ASL)},
@@ -163,11 +163,11 @@ namespace NesTry
                 {0x18,new DelegateOP(A_IMP, O_CLC)},
                 {0x19,new DelegateOP(A_ABY, O_ORA)},
                 {0x1A,new DelegateOP(A_IMP, O_NOP)},
-                {0x1B,new DelegateOP(A_ABY, O_SLO)},
+                {0x1B,new DelegateOP(A_aby, O_SLO)},
                 {0x1C,new DelegateOP(A_ABX, O_NOP)},
                 {0x1D,new DelegateOP(A_ABX, O_ORA)},
                 {0x1E,new DelegateOP(A_ABX, O_ASL)},
-                {0x1F,new DelegateOP(A_ABX, O_SLO)},
+                {0x1F,new DelegateOP(A_abx, O_SLO)},
 
                 {0x20,new DelegateOP(A_ABS, O_JSR)},
                 {0x21,new DelegateOP(A_INX, O_AND)},
@@ -190,7 +190,7 @@ namespace NesTry
                 {0x30,new DelegateOP(A_REL, O_BMI)},
                 {0x31,new DelegateOP(A_INY, O_AND)},
                 {0x32,new DelegateOP(A_UNK, O_UNK)},
-                {0x33,new DelegateOP(A_INY, O_RLA)},
+                {0x33,new DelegateOP(A_iny, O_RLA)},
                 {0x34,new DelegateOP(A_ZPX, O_NOP)},
                 {0x35,new DelegateOP(A_ZPX, O_AND)},
                 {0x36,new DelegateOP(A_ZPX, O_ROL)},
@@ -199,11 +199,11 @@ namespace NesTry
                 {0x38,new DelegateOP(A_IMP, O_SEC)},
                 {0x39,new DelegateOP(A_ABY, O_AND)},
                 {0x3A,new DelegateOP(A_IMP, O_NOP)},
-                {0x3B,new DelegateOP(A_ABY, O_RLA)},
+                {0x3B,new DelegateOP(A_aby, O_RLA)},
                 {0x3C,new DelegateOP(A_ABX, O_NOP)},
                 {0x3D,new DelegateOP(A_ABX, O_AND)},
                 {0x3E,new DelegateOP(A_ABX, O_ROL)},
-                {0x3F,new DelegateOP(A_ABX, O_RLA)},
+                {0x3F,new DelegateOP(A_abx, O_RLA)},
 
                 {0x40,new DelegateOP(A_IMP, O_RTI)},
                 {0x41,new DelegateOP(A_INX, O_EOR)},
@@ -226,7 +226,7 @@ namespace NesTry
                 {0x50,new DelegateOP(A_REL, O_BVC)},
                 {0x51,new DelegateOP(A_INY, O_EOR)},
                 {0x52,new DelegateOP(A_UNK, O_UNK)},
-                {0x53,new DelegateOP(A_INY, O_SRE)},
+                {0x53,new DelegateOP(A_iny, O_SRE)},
                 {0x54,new DelegateOP(A_ZPX, O_NOP)},
                 {0x55,new DelegateOP(A_ZPX, O_EOR)},
                 {0x56,new DelegateOP(A_ZPX, O_LSR)},
@@ -235,11 +235,11 @@ namespace NesTry
                 {0x58,new DelegateOP(A_IMP, O_CLI)},
                 {0x59,new DelegateOP(A_ABY, O_EOR)},
                 {0x5A,new DelegateOP(A_IMP, O_NOP)},
-                {0x5B,new DelegateOP(A_ABY, O_SRE)},
+                {0x5B,new DelegateOP(A_aby, O_SRE)},
                 {0x5C,new DelegateOP(A_ABX, O_NOP)},
                 {0x5D,new DelegateOP(A_ABX, O_EOR)},
                 {0x5E,new DelegateOP(A_ABX, O_LSR)},
-                {0x5F,new DelegateOP(A_ABX, O_SRE)},
+                {0x5F,new DelegateOP(A_abx, O_SRE)},
 
                 {0x60,new DelegateOP(A_IMP, O_RTS)},
                 {0x61,new DelegateOP(A_INX, O_ADC)},
@@ -262,7 +262,7 @@ namespace NesTry
                 {0x70,new DelegateOP(A_REL, O_BVS)},
                 {0x71,new DelegateOP(A_INY, O_ADC)},
                 {0x72,new DelegateOP(A_UNK, O_UNK)},
-                {0x73,new DelegateOP(A_INY, O_RRA)},
+                {0x73,new DelegateOP(A_iny, O_RRA)},
                 {0x74,new DelegateOP(A_ZPX, O_NOP)},
                 {0x75,new DelegateOP(A_ZPX, O_ADC)},
                 {0x76,new DelegateOP(A_ZPX, O_ROR)},
@@ -271,11 +271,11 @@ namespace NesTry
                 {0x78,new DelegateOP(A_IMP, O_SEI)},
                 {0x79,new DelegateOP(A_ABY, O_ADC)},
                 {0x7A,new DelegateOP(A_IMP, O_NOP)},
-                {0x7B,new DelegateOP(A_ABY, O_RRA)},
+                {0x7B,new DelegateOP(A_aby, O_RRA)},
                 {0x7C,new DelegateOP(A_ABX, O_NOP)},
                 {0x7D,new DelegateOP(A_ABX, O_ADC)},
                 {0x7E,new DelegateOP(A_ABX, O_ROR)},
-                {0x7F,new DelegateOP(A_ABX, O_RRA)},
+                {0x7F,new DelegateOP(A_abx, O_RRA)},
 
                 {0x80,new DelegateOP(A_IMM, O_NOP)},
                 {0x81,new DelegateOP(A_INX, O_STA)},
@@ -370,7 +370,7 @@ namespace NesTry
                 {0xD0,new DelegateOP(A_REL, O_BNE)},
                 {0xD1,new DelegateOP(A_INY, O_CMP)},
                 {0xD2,new DelegateOP(A_UNK, O_UNK)},
-                {0xD3,new DelegateOP(A_INY, O_DCP)},
+                {0xD3,new DelegateOP(A_iny, O_DCP)},
                 {0xD4,new DelegateOP(A_ZPX, O_NOP)},
                 {0xD5,new DelegateOP(A_ZPX, O_CMP)},
                 {0xD6,new DelegateOP(A_ZPX, O_DEC)},
@@ -379,11 +379,11 @@ namespace NesTry
                 {0xD8,new DelegateOP(A_IMP, O_CLD)},
                 {0xD9,new DelegateOP(A_ABY, O_CMP)},
                 {0xDA,new DelegateOP(A_IMP, O_NOP)},
-                {0xDB,new DelegateOP(A_ABY, O_DCP)},
+                {0xDB,new DelegateOP(A_aby, O_DCP)},
                 {0xDC,new DelegateOP(A_ABX, O_NOP)},
                 {0xDD,new DelegateOP(A_ABX, O_CMP)},
                 {0xDE,new DelegateOP(A_ABX, O_DEC)},
-                {0xDF,new DelegateOP(A_ABX, O_DCP)},
+                {0xDF,new DelegateOP(A_abx, O_DCP)},
 
                 {0xE0,new DelegateOP(A_IMM, O_CPX)},
                 {0xE1,new DelegateOP(A_INX, O_SBC)},
@@ -406,7 +406,7 @@ namespace NesTry
                 {0xF0,new DelegateOP(A_REL, O_BEQ)},
                 {0xF1,new DelegateOP(A_INY, O_SBC)},
                 {0xF2,new DelegateOP(A_UNK, O_UNK)},
-                {0xF3,new DelegateOP(A_INY, O_ISB)},
+                {0xF3,new DelegateOP(A_iny, O_ISB)},
                 {0xF4,new DelegateOP(A_ZPX, O_NOP)},
                 {0xF5,new DelegateOP(A_ZPX, O_SBC)},
                 {0xF6,new DelegateOP(A_ZPX, O_INC)},
@@ -415,11 +415,11 @@ namespace NesTry
                 {0xF8,new DelegateOP(A_IMP, O_SED)},
                 {0xF9,new DelegateOP(A_ABY, O_SBC)},
                 {0xFA,new DelegateOP(A_IMP, O_NOP)},
-                {0xFB,new DelegateOP(A_ABY, O_ISB)},
+                {0xFB,new DelegateOP(A_aby, O_ISB)},
                 {0xFC,new DelegateOP(A_ABX, O_NOP)},
                 {0xFD,new DelegateOP(A_ABX, O_SBC)},
                 {0xFE,new DelegateOP(A_ABX, O_INC)},
-                {0xFF,new DelegateOP(A_ABX, O_ISB)},
+                {0xFF,new DelegateOP(A_abx, O_ISB)},
             };
         }
         /// <summary>
@@ -1136,6 +1136,10 @@ namespace NesTry
             byte pcl = SFC_POP();
             byte pch = SFC_POP();
             m_cpu.Registers.program_counter = (UInt16)(pcl | (UInt16)pch << 8);
+
+            m_cpu.Registers.irq_counter = (byte)(m_cpu.Registers.irq_in_process & m_cpu.Registers.irq_flag);
+            m_cpu.Registers.irq_counter &= (byte)((~m_cpu.Registers.status) >> (byte)Fc_status_index.FC_INDEX_I);
+            m_cpu.Registers.irq_in_process = 0;
         }
 
         /// <summary>
@@ -1305,6 +1309,8 @@ namespace NesTry
             m_cpu.Registers.status = SFC_POP();
             SFC_RF_SE();
             SFC_BF_CL();
+            if(!(SFC_IF() > 0))
+            m_cpu.Registers.irq_counter = (byte)(m_cpu.Registers.irq_flag << 1);
         }
 
         /// <summary>
@@ -1519,6 +1525,7 @@ namespace NesTry
         private void O_CLI(UInt16 address, ref UInt32 cycle_add)
         {
             SFC_IF_CL();
+            m_cpu.Registers.irq_counter = (byte)(m_cpu.Registers.irq_flag << 1);
         }
 
         /// <summary>
@@ -1860,7 +1867,6 @@ namespace NesTry
 
         public void O_IRQ()
         {
-            if (SFC_IF() > 0) return;
             byte pch = (byte)((m_cpu.Registers.program_counter) >> 8);
             byte pcl = (byte)m_cpu.Registers.program_counter;
             SFC_PUSH(pch);
@@ -1872,6 +1878,18 @@ namespace NesTry
             m_cpu.Registers.program_counter = (UInt16)(pcl2 | pch2 << 8);
 
             m_cpu.m_famicom.cpu_cycle_count += 7;
+        }
+        public void O_IRQ_ack()
+        {
+            m_cpu.Registers.irq_flag = 0;
+            m_cpu.Registers.irq_counter = 0;
+        }
+        public void O_IRQ_try()
+        {
+            if (SFC_IF() > 0)
+                m_cpu.Registers.irq_flag = 1;
+            else
+                m_cpu.Registers.irq_counter = 1;
         }
     }
 }
