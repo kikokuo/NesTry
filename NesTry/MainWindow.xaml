@@ -6,8 +6,15 @@
         xmlns:local="clr-namespace:NesTry"
         mc:Ignorable="d"
         Title="NES"  Height="400" Width="400" Focusable="True" KeyUp ="Window_KeyUp" KeyDown="Window_KeyDown" Closing="Window_Closing">
-        <Viewbox Stretch="Fill" >
-        <Canvas Name="GameArea"  ClipToBounds="false" IsHitTestVisible="false"  Width="256" Height="240" >
-               </Canvas>
-        </Viewbox>
+        <DockPanel>
+            <Menu DockPanel.Dock="Top">
+                <MenuItem Header="_File">
+                    <MenuItem Header="_Open"  Click="mnuOpen_Click" />
+                </MenuItem>
+            </Menu>
+            <Viewbox Stretch="Fill" >
+                <Canvas Name="GameArea"  ClipToBounds="false" IsHitTestVisible="false"  Width="256" Height="240" >
+                </Canvas>
+            </Viewbox>
+        </DockPanel>
 </Window>

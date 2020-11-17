@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -44,15 +45,13 @@ namespace NesTry
             GameArea.Children.Add(render);
 
             famicom = new Famicom();
-            famicom.LoadRom("1.nes");
-            famicom.Reset();
 
             //CompositionTarget.Rendering += CompositionTarget_Rendering;
             UpdateGame();
         }
         private void Window_KeyUp(object sender, KeyEventArgs e)
         { 
-           famicom.User_Input(e.Key, 0);
+            famicom.User_Input(e.Key, 0);
         }
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
@@ -100,6 +99,17 @@ namespace NesTry
                     SpinWait.SpinUntil(() => !this.IsRunning, this.Interval);
                 }
             }).Start();
+        }
+
+        private void mnuOpen_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Nes files (*.nes)|*.nes|All files (*.*)|*.*";
+            if (openFileDialog.ShowDialog() == true)
+            {
+                famicom.LoadRom(openFileDialog.FileName);
+                famicom.Reset();
+            }
         }
     }
 }

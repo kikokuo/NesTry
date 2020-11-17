@@ -23,17 +23,20 @@ namespace NesTry
         }
         public bool Reset(ref List<byte[]> prg_banks, ref List<byte[]> ppu_banks, RomInfo romInfo)
         {
-             mapperbase.Reset(ref prg_banks,ref ppu_banks, romInfo);
+            if (mapperbase != null)
+                mapperbase.Reset(ref prg_banks,ref ppu_banks, romInfo);
              return true;
         }
 
         public void Write_high_address(UInt16 address, byte value)
         {
-            mapperbase.Write_high_address(address, value);
+            if (mapperbase != null)
+                mapperbase.Write_high_address(address, value);
         }
         public void Hsync()
         {
-            mapperbase.Hsync();
+            if(mapperbase != null)
+               mapperbase.Hsync();
         }
 
         static public void Load_Prgrom_8k(ref List<byte[]> prg_banks, RomInfo romInfo, int des, int src)

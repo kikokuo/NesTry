@@ -38,11 +38,14 @@ namespace NesTry
         public byte control1;
         // 控制信息2
         public byte control2;
+        // MAPPER變種
+        public byte mapper_variant;
+        // 高位ROM大小
+        public byte upper_rom_size;
+        // RAM大小
+        public byte ram_size;
         // 保留數據
         public byte[] reserved;
-        public int trainer;
-        public int unisystem;
-        public int playchoice10;
     }
     enum Contorl_1{
         NES_VMIRROR = 0x01,
@@ -85,46 +88,46 @@ namespace NesTry
             m_romHead.count_chrrom_8kb = r.ReadByte();
             m_romHead.control1 = r.ReadByte();
             m_romHead.control2 = r.ReadByte();
-            m_romHead.trainer = (int)m_romHead.control1 & (int)(object)Contorl_1.NES_TRAINER;
-            if (m_romHead.trainer != 0)
+
+            if ((m_romHead.control1 & (byte)Contorl_1.NES_TRAINER) > 0)
                 return Fc_error_code.FC_ERROR_UNSUPPORT;
-            m_romHead.unisystem = (int)m_romHead.control2 & (int)(object)Control_2.NES_VS_UNISYSTEM;
-            if (m_romHead.unisystem != 0)
+            if ((m_romHead.control2 & (byte)Control_2.NES_VS_UNISYSTEM) > 0)
                 return Fc_error_code.FC_ERROR_UNSUPPORT;
-            m_romHead.playchoice10 = (int)m_romHead.control2 & (int)(object)Control_2.NES_Playchoice10;
-            if (m_romHead.playchoice10 != 0)
+            if ((m_romHead.control2 & (byte)Control_2.NES_Playchoice10) > 0)
                 return Fc_error_code.FC_ERROR_UNSUPPORT;
 
-            List<byte> termsList = new List<byte>();
-            for (int i = 0; i < 8; i++)
-                termsList.Add(r.ReadByte());
-            m_romHead.reserved = termsList.ToArray();
+            m_romHead.mapper_variant = r.ReadByte();
+            m_romHead.upper_rom_size = r.ReadByte();
+            m_romHead.ram_size = r.ReadByte();
+            m_romHead.reserved = r.ReadBytes(5);
             return Fc_error_code.FC_ERROR_OK;
         }
 
 
         private Fc_error_code ReadRomBody(BinaryReader r)
         {
-            int size1 = 16384 * m_romHead.count_prgrom16kb;
-            int size2 = 8192 * (m_romHead.count_chrrom_8kb|1);
-            int size3 = 8192 * m_romHead.count_chrrom_8kb;
-            m_romInfo.count_prgrom16kb = m_romHead.count_prgrom16kb;
-            m_romInfo.count_chrrom_8kb = m_romHead.count_chrrom_8kb;
+            uint prgrom16 = (uint)(m_romHead.count_prgrom16kb| ((m_romHead.upper_rom_size & 0x0F) << 8));
+            uint chrrom8 = (uint)(m_romHead.count_chrrom_8kb | ((m_romHead.upper_rom_size & 0xF0) << 4));
+
+            uint size1 = 16384 * prgrom16;
+            uint size2 = 8192 * (chrrom8 | 1);
+            uint size3 = 8192 * chrrom8;
+
+            m_romInfo.count_prgrom16kb = (int)prgrom16;
+            m_romInfo.count_chrrom_8kb = (int)chrrom8;
             m_romInfo.mapper_number = m_romHead.control1 >> 4 | (m_romHead.control2 & 0xF0);
 
-            m_romInfo.vmirroring = (m_romHead.control1 & (int)(object)Contorl_1.NES_VMIRROR) > 0;
-            m_romInfo.four_screen = (m_romHead.control1 & (int)(object)Contorl_1.NES_4SCREEN) > 0;
-            m_romInfo.save_ram = (m_romHead.control1 & (int)(object)Contorl_1.NES_SAVERAM) > 0;
+            m_romInfo.vmirroring = (m_romHead.control1 & (byte)Contorl_1.NES_VMIRROR) > 0;
+            m_romInfo.four_screen = (m_romHead.control1 & (byte)Contorl_1.NES_4SCREEN) > 0;
+            m_romInfo.save_ram = (m_romHead.control1 & (byte)Contorl_1.NES_SAVERAM) > 0;
 
             // jump Trainer data section
-            if (m_romHead.trainer != 0) 
+            if ((m_romHead.control1 & (byte)Contorl_1.NES_TRAINER) > 0) 
                 r.BaseStream.Seek(512, SeekOrigin.Current);
 
-            List<byte> termsList = new List<byte>();
-            for (int i = 0; i < (size1 + size2); i++)
-                termsList.Add(r.ReadByte());
-            m_romInfo.data_prgrom = termsList.ToArray();
-            m_romInfo.data_chrrom = termsList.GetRange(size1, size3).ToArray();
+            m_romInfo.data_prgrom = r.ReadBytes((int)(size1 + size3));
+            m_romInfo.data_chrrom = new byte[size3];
+            Array.Copy(m_romInfo.data_prgrom, size1, m_romInfo.data_chrrom,0, size3);
             return Fc_error_code.FC_ERROR_OK;
         }
 
