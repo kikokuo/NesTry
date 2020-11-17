@@ -428,10 +428,17 @@ namespace NesTry
         private void Render_Background_Scanline(UInt16 line,byte[] sp0,ref byte [] buffer,int index_buffer) 
         {
             if (!((m_ppu.m_mask & (byte)Fc_ppu_flag.FC_PPU2001_Back) > 0)) return;
-            
-            UInt16 scrollx = (UInt16)(m_ppu.m_scroll[0] + ((m_ppu.m_nametable_select & 1) << 8));
 
-            UInt16 scrolly = (UInt16)(line + m_ppu.now_scrolly + ((m_ppu.m_nametable_select & 2) > 0? 240 : 0));
+            // 計算當前水平偏移量
+            UInt16 scrollx = (ushort)(m_ppu.v &0x0400);
+            if (scrollx > 0)
+                scrollx = 256;
+            scrollx +=(ushort)(((m_ppu.v & 0x1f) << 3) + m_ppu.x);
+            // 計算當前垂直偏移量
+            UInt16 scrolly = (ushort)(m_ppu.v & 0x0800);
+            if (scrolly > 0)
+                scrolly = 240;
+            scrolly += (ushort)((((m_ppu.v >> 5) & 0x1f) << 3)+ (m_ppu.v >> 12));
 
 
             UInt16 scrolly_index0 = (UInt16)(scrolly / 240);
@@ -462,12 +469,10 @@ namespace NesTry
 
                 byte too_young0 = m_ppu.m_banks[nt][(xunit << 1) + (realy >> 3 << 5)+0];
                 byte too_young1 = m_ppu.m_banks[nt][(xunit << 1) + (realy >> 3 << 5)+1];
-                UInt32 nowp0 = (uint)(too_young0 * 16 + (realy & 7) + 0);
-                byte ind_0 = (byte)(nowp0 / 1024);
-                nowp0 = nowp0 % 1024;
-                UInt32 nowp1 = (uint)(too_young1 * 16 + (realy & 7) + 0);
-                byte ind_1 = (byte)(nowp1 / 1024);
-                nowp1 = nowp1 % 1024;
+                UInt32 nowp0 = (uint)((too_young0&0x3f) * 16 + (realy & 7));
+                byte ind_0 = (byte)(too_young0>>6);
+                UInt32 nowp1 = (uint)((too_young1 & 0x3f) * 16 + (realy & 7));
+                byte ind_1 = (byte)(too_young1>>6);
                 byte plane0 = m_ppu.m_banks[pattern + ind_0][nowp0 + 0];
                 byte plane1 = m_ppu.m_banks[pattern + ind_0][nowp0 + 8];
                 byte plane2 = m_ppu.m_banks[pattern + ind_1][nowp1 + 0];
@@ -643,7 +648,19 @@ namespace NesTry
             byte sp8x16 = (byte)((m_ppu.m_ctrl & (byte)Fc_ppu_flag.FC_PPU2000_Sp8x16) >> 2);
 
             byte sppbuffer_0 = (byte)(sp8x16 > 0 ? 0 : ((m_ppu.m_ctrl & (byte)Fc_ppu_flag.FC_PPU2000_SpTabl) > 0 ? 4 : 0));
-            byte sppbuffer_1 = (byte)(sp8x16 > 0 ? 4 : sppbuffer_0);// + 16
+            byte sppbuffer_1 = (byte)(sp8x16 > 0 ? 4 : sppbuffer_0);
+            byte sppbuffer_2 = (byte)(sp8x16 > 0 ? 0 : 16);
+
+            byte[] bank_ind = new byte[8];
+
+            bank_ind[0] = sppbuffer_0;
+            bank_ind[1] = (byte)(sppbuffer_0 + 1);
+            bank_ind[2] = (byte)(sppbuffer_0 + 2);
+            bank_ind[3] = (byte)(sppbuffer_0 + 3);
+            bank_ind[4] = sppbuffer_1;
+            bank_ind[5] = (byte)(sppbuffer_1 + 1);
+            bank_ind[6] = (byte)(sppbuffer_1 + 2);
+            bank_ind[7] = (byte)(sppbuffer_1 + 3);
 
             for (int index = 0; index != 64; ++index)
             {
@@ -656,13 +673,10 @@ namespace NesTry
                 byte xxxx = m_ppu.m_sprites[sprints_base + 3];
                 byte high = (byte)(((aaaa & 3) | 4) << 3);
 
-                UInt16 nowp0_ind = (iiii & 1) > 0 ? sppbuffer_1: sppbuffer_0;
-                UInt32 nowp0 = (UInt32)((iiii & 0xFE) * 16);
-                if ((iiii & 1) > 0 && !(sp8x16 > 0))
-                    nowp0 += 16;
-                byte ind_0 = (byte)(nowp0 / 1024);
-                nowp0_ind += ind_0;
-                nowp0 = nowp0 % 1024;
+                UInt16 nowp0_ind = bank_ind[(iiii>>6)|(iiii&0x1)<<2];
+                UInt32 nowp0 = (UInt32)((iiii & 0x3E) * 16);
+                if (((iiii >> 6) | (iiii & 0x1) << 2) >= 4)
+                    nowp0 += sppbuffer_2;
 
                 UInt32 nowp1 = (UInt32)(nowp0 + 8);
                 int write = (int)(xxxx + (yyyy + 1) * 256);
@@ -679,19 +693,7 @@ namespace NesTry
                         break;
                     case 0x9:   
                         for (int j = 0; j != 8; ++j)
-                        {
-                            uint nowp_0 = (uint)(nowp0 +j + 16);
-                            ind_0 = (byte)(nowp_0 / 1024);
-                            byte nowp0_ind_1 = (byte)(nowp0_ind +ind_0);
-                            nowp_0 = nowp_0 % 1024;
-
-                            uint nowp_1 = (uint)(nowp1 +j + 16);
-                            ind_0 = (byte)(nowp_1 / 1024);
-                            byte nowp0_ind_2 = (byte)(nowp0_ind + ind_0);
-                            nowp_1 = nowp_1 % 1024;
-
-                            Sprite_Expand_8_Op(m_ppu.m_banks[nowp0_ind_1][nowp_0], m_ppu.m_banks[nowp0_ind_2][nowp_1], high, ref buffer, write + 256 * (j + 8));
-                        }
+                            Sprite_Expand_8_Op(m_ppu.m_banks[nowp0_ind][nowp0 + j+16], m_ppu.m_banks[nowp0_ind][nowp1 + j+16], high, ref buffer, write + 256 * (j + 8));
                         break;
                     case 0x1:
                         // 0001: 后
@@ -775,14 +777,14 @@ namespace NesTry
             UInt32 end_cycle_count = 0;
 
             //hit test
-            byte []sp0_hittest_buffer = new byte[240];
+            byte []sp0_hittest_buffer = new byte[256];
             Sprite0_Hittest(ref sp0_hittest_buffer);
 
             UInt16 overflow_line = Sprite_Overflow_test();
             if (!((m_ppu.m_mask & (byte)Fc_ppu_flag.FC_PPU2001_Back)> 0))
                 Array.Clear(buffer, 0, 256 * 240);
 
-            m_apu.sfc_trigger_frame_counter();
+
             int index_buffer = 0;
             for (UInt16 i = 0; i != 240; ++i)
             {
@@ -798,20 +800,23 @@ namespace NesTry
                 for (; cpu_cycle_count < end_cycle_count_this_round;)
                     m_nes6502.Fc_cpu_execute_one();
 
+
+                if (m_ppu.CheckRenderBackground())
+                    m_ppu.RunFreeCycle();
+
                 m_mapper.Hsync();
                 index_buffer += 256;
                 if(i% 66 == 65)
                 m_apu.sfc_trigger_frame_counter();
             }
 
-            if ((m_ppu.m_mask & (byte)Fc_ppu_flag.FC_PPU2001_Sprite) > 0)
-                 Render_Sprites(ref buffer);
-
             {
                 end_cycle_count += per_scanline;
                 UInt32 end_cycle_count_this_round = end_cycle_count / Master_Cycle_Per_CPU;
                 for (; cpu_cycle_count < end_cycle_count_this_round;)
                     m_nes6502.Fc_cpu_execute_one();
+
+                m_mapper.Hsync();
             }
 
              m_ppu.m_status |= (byte)Fc_ppu_flag.FC_PPU2002_VBlank;
@@ -828,8 +833,10 @@ namespace NesTry
 
             m_ppu.m_status = 0;
 
-            m_ppu.now_scrolly = m_ppu.m_scroll[1];
+            if (m_ppu.CheckRenderBackground())
+                m_ppu.PPU_Do_End_Of_Vblank();
 
+            m_apu.sfc_trigger_frame_counter();
 
             end_cycle_count += per_scanline * 2;
 
@@ -839,6 +846,9 @@ namespace NesTry
                 m_nes6502.Fc_cpu_execute_one();
 
             cpu_cycle_count -= end_cycle_count_last_round;
+
+            if (m_ppu.CheckRenderSprite())
+                Render_Sprites(ref buffer);
         }
 
         /// <summary>

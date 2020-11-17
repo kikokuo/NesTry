@@ -428,6 +428,18 @@ namespace NesTry
         /// <param name="famicom">The famicom.</param>
         public void Fc_cpu_execute_one()
         {
+            //疑似有bug會導致雙節龍無法執行
+            /*if(m_cpu.Registers.irq_counter > 0)
+            {
+                --m_cpu.Registers.irq_counter;
+                if (m_cpu.Registers.irq_counter == 0)
+                {
+                    m_cpu.Registers.irq_in_process = 1;
+                    O_IRQ();
+                    return;
+                }
+            }*/
+
             byte opcode = (byte)SFC_READ_PC(m_cpu.Registers.program_counter++);
             UInt32 cycle_add = 0;
             cycle_add += OpBasicCycle[opcode];

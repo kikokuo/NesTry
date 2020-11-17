@@ -67,14 +67,16 @@ namespace NesTry
 
     public class NesPPU
     {
-        //名稱選擇表
-        public byte m_nametable_select;
-        //當前使用的垂直偏移
-        public byte now_scrolly;
         // 內存地址庫
         public List<byte[]> m_banks;
-        // VRAM 地址
-        public UInt16 m_vramaddr;
+        // VRAM 地址 15bit
+        public UInt16 v;
+        // 臨時 VRAM 地址 15bit
+        public UInt16 t;
+        // 微調X滾動偏移 3bit
+        public byte x;
+        // 寫入切換 1bit
+        public byte w;
         // 寄存器 PPUCTRL @$2000
         public byte m_ctrl;
         // 寄存器 PPUMASK @$2001
@@ -83,10 +85,6 @@ namespace NesTry
         public byte m_status;
         // 寄存器 OAMADDR @$2003
         public byte m_oamaddr;
-        // 滾動偏移
-        public byte[] m_scroll;
-        // 滾動偏移雙寫位置記錄
-        public byte m_writex2;
         // 顯存讀取緩沖值
         public byte m_pseudo;
         // 精靈調色板索引
@@ -121,15 +119,12 @@ namespace NesTry
             m_banks = new List<byte[]>();
             for(int i = 0;i < 16;i++)
                 m_banks.Add(new byte[1024]);
-            m_scroll = new byte[2];
             m_spindexes = new byte[0x20];
             m_sprites = new byte[0x100];
-            m_vramaddr = 0;
             m_ctrl = 0;
             m_mask = 0;
             m_status = 0;
             m_oamaddr = 0;
-            m_writex2 = 0;
             m_pseudo = 0;
         }
         public void Clear()
@@ -137,15 +132,12 @@ namespace NesTry
             foreach(var v in m_banks){
                 Array.Clear(v, 0, 1024);
             }
-            Array.Clear(m_scroll, 0, 2);
             Array.Clear(m_spindexes, 0, 0x20);
             Array.Clear(m_sprites, 0, 0x100);
-            m_vramaddr = 0;
             m_ctrl = 0;
             m_mask = 0;
             m_status = 0;
             m_oamaddr = 0;
-            m_writex2 = 0;
             m_pseudo = 0;
         }
         public void Reset()
@@ -168,7 +160,7 @@ namespace NesTry
                 case 1:
                     // 0x2001: Mask ($2001) > write
                     // 只寫寄存器
-                    Debug.Assert(true,"write only!");
+                    //Debug.Assert(true,"write only!");
                     break;
                 case 2:
                     // 0x2002: Status ($2002) < read
@@ -177,11 +169,12 @@ namespace NesTry
                     // 讀取後會清除VBlank狀態
                     var vblank = ~Fc_ppu_flag.FC_PPU2002_VBlank;
                     m_status &= (byte)vblank;
+                    this.w = 0;
                     break;
                 case 3:
                     // 0x2003: OAM address port ($2003) > write
                     // 只寫寄存器
-                    Debug.Assert(true, "write only!");
+                    //Debug.Assert(true, "write only!");
                     break;
                 case 4:
                     // 0x2004: OAM data ($2004) <> read/write
@@ -194,14 +187,14 @@ namespace NesTry
                 case 6:
                     // 0x2006: Address ($2006) >> write x2
                     // 雙寫寄存器
-                    Debug.Assert(true, "write only!");
+                    //Debug.Assert(true, "write only!");
                     break;
                 case 7:
                     // 0x2007: Data ($2007) <> read/write
                     // PPU VRAM讀寫端口
-                    data = Read_PPU_Address(m_vramaddr);
+                    data = Read_PPU_Address(this.v);
                     var vinc32 = m_ctrl & (byte)Fc_ppu_flag.FC_PPU2000_VINC32;
-                    m_vramaddr += (UInt16)(vinc32 > 0 ? 32 : 1);
+                    this.v += (UInt16)(vinc32 > 0 ? 32 : 1);
                     break;
             }
             return data;
@@ -214,8 +207,8 @@ namespace NesTry
                 case 0:
                     // PPU 控制寄存器
                     // 0x2000: Controller ($2000) > write
-                    m_ctrl = data;
-                    m_nametable_select = (byte)(data & 3);
+                    m_ctrl = data; 
+                    this.t = (ushort)((this.t & 0xF3FF) |((data & 0x03) << 10));
                     break;
                 case 1:
                     // PPU 掩碼寄存器
@@ -240,33 +233,41 @@ namespace NesTry
                 case 5:
                     // 0x2005: Scroll ($2005) >> write x2
                     // PPU 滾動位置寄存器 - 雙寫
-                    m_scroll[m_writex2 & 1] = data;
-                    ++m_writex2;
+                    if(this.w > 0)
+                    {
+                        this.t = (ushort)((t & 0x8FFF) | ((data & 0x07) << 12));
+                        this.t = (ushort)((t & 0xFC1F) | ((data & 0xF8) << 2));
+                        this.w = 0;
+                    }
+                    else
+                    {
+                        this.t = (ushort)((t & 0xFFE0) | (data >> 3));
+                        this.x = (byte)(data & 0x07);
+                        this.w = 1;
+                    }
                     break;
                 case 6:
                     // 0x2006: Address ($2006) >> write x2
                     // PPU 地址寄存器 - 雙寫
                     // 寫入高字節
-                    if ((m_writex2 & 0x01) > 0)
+                    if (this.w > 0)
                     {
-                        m_vramaddr = (UInt16)((m_vramaddr & 0xFF00) | data);
-                        m_nametable_select = (byte)((m_vramaddr >> 10 )& 3);
-                        m_scroll[0] = (byte)((m_scroll[0] & 7) | ((m_vramaddr & 0x1f) << 3));
-                        m_scroll[1] = (byte)(((m_vramaddr & 0x3e0) >> 2)| ((m_vramaddr & 0x7000) >>12));
+                        this.t = (ushort)((t & 0xFF00) | data);
+                        this.v = this.t;
+                        this.w = 0;
                     }
-                    // 寫入低字節
                     else
                     {
-                        m_vramaddr = (UInt16)((m_vramaddr & 0x00FF) | (data << 8));
+                        this.t = (ushort)((t & 0x80FF) | ((data & 0x3F) << 8));
+                        this.w = 1;
                     }
-                    ++m_writex2;
                     break;
                 case 7:
                     // 0x2007: Data ($2007) <> read/write
                     // PPU VRAM數據端
-                    Write_PPU_Address(m_vramaddr, data);
+                    Write_PPU_Address(this.v, data);
                     var vinc32 = m_ctrl & (byte)Fc_ppu_flag.FC_PPU2000_VINC32;
-                    m_vramaddr += (UInt16)(vinc32 > 0 ? 32 : 1);
+                    this.v += (UInt16)(vinc32 > 0 ? 32 : 1);
                     break;
             }
         }
@@ -330,6 +331,79 @@ namespace NesTry
                     m_spindexes[offset | 0x10] = data;
                 }
             }
+        }
+
+        public void RunFreeCycle()
+        {
+            PPU_Do_Under_Cycle256();
+            PPU_Do_Under_Cycle257();
+        }
+
+        /// <summary>
+        /// SFCs the ppu do under cycle256
+        /// </summary>
+        /// <param name="ppu">The ppu.</param>
+        private void PPU_Do_Under_Cycle256()
+        {
+            // http://wiki.nesdev.com/w/index.php/PPU_scrolling#Wrapping_around
+
+            if ((this.v & 0x7000) != 0x7000)
+            {
+                this.v += 0x1000;
+            }
+            else
+            {
+                this.v &= 0x8FFF;
+                UInt16 y = (ushort)((v & 0x03E0) >> 5);
+                if (y == 29)
+                {
+                    y = 0;
+                    this.v ^= 0x0800;
+                }
+                else if (y == 31)
+                {
+                    y = 0;
+                }
+                else
+                {
+                    y++;
+                }
+                // put coarse Y back into v
+                v = (ushort)((v & 0xFC1F) | (y << 5));
+            }
+        }
+
+        /// <summary>
+        /// SFCs the ppu do under cycle257.
+        /// </summary>
+        /// <param name="ppu">The ppu.</param>
+        private void PPU_Do_Under_Cycle257()
+        {
+            // v: .....F.. ...EDCBA = t: .....F.. ...EDCBA
+            v = (ushort)((v & 0xFBE0) | (t & 0x041F));
+        }
+
+
+        /// <summary>
+        /// SFCs the ppu do end of vblank.
+        /// </summary>
+        /// <param name="ppu">The ppu.</param>
+        public void PPU_Do_End_Of_Vblank()
+        {
+            // v: .....F.. ...EDCBA = t: .....F.. ...EDCBA
+            v = (ushort)((v & 0x841F) | (t & 0x7BE0));
+        }
+        public bool CheckRenderBackground()
+        {
+            if ((m_mask & (byte)Fc_ppu_flag.FC_PPU2001_Back) > 0)
+                return true;
+            return false;
+        }
+        public bool CheckRenderSprite()
+        {
+            if ((m_mask & (byte)Fc_ppu_flag.FC_PPU2001_Sprite) > 0)
+                return true;
+            return false;
         }
     }
 }
