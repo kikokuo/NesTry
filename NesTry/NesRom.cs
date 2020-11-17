@@ -106,7 +106,7 @@ namespace NesTry
 
         private Fc_error_code ReadRomBody(BinaryReader r)
         {
-            uint prgrom16 = (uint)(m_romHead.count_prgrom16kb| ((m_romHead.upper_rom_size & 0x0F) << 8));
+            uint prgrom16 = (uint)(m_romHead.count_prgrom16kb | ((m_romHead.upper_rom_size & 0x0F) << 8));
             uint chrrom8 = (uint)(m_romHead.count_chrrom_8kb | ((m_romHead.upper_rom_size & 0xF0) << 4));
 
             uint size1 = 16384 * prgrom16;
@@ -122,12 +122,15 @@ namespace NesTry
             m_romInfo.save_ram = (m_romHead.control1 & (byte)Contorl_1.NES_SAVERAM) > 0;
 
             // jump Trainer data section
-            if ((m_romHead.control1 & (byte)Contorl_1.NES_TRAINER) > 0) 
+            if ((m_romHead.control1 & (byte)Contorl_1.NES_TRAINER) > 0)
                 r.BaseStream.Seek(512, SeekOrigin.Current);
-
             m_romInfo.data_prgrom = r.ReadBytes((int)(size1 + size3));
-            m_romInfo.data_chrrom = new byte[size3];
-            Array.Copy(m_romInfo.data_prgrom, size1, m_romInfo.data_chrrom,0, size3);
+            if (size3 != 0) { 
+                m_romInfo.data_chrrom = new byte[size3];
+                Array.Copy(m_romInfo.data_prgrom, size1, m_romInfo.data_chrrom, 0, size3);
+            }else{
+                m_romInfo.data_chrrom = new byte[size2];
+            }
             return Fc_error_code.FC_ERROR_OK;
         }
 
