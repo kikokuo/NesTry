@@ -5,6 +5,14 @@ using System.Text;
 
 namespace NesTry
 {
+     enum nametable_mirroring_mode
+    {
+        SFC_NT_MIR_SingleLow = 0,
+        SFC_NT_MIR_SingleHigh,
+        SFC_NT_MIR_Vertical,
+        SFC_NT_MIR_Horizontal,
+        SFC_NT_MIR_FourScreen,
+    };
     public class RomMapper
     {
         public MapperBase mapperbase;

@@ -117,7 +117,7 @@ namespace NesTry
         public NesPPU()
         {
             m_banks = new List<byte[]>();
-            for(int i = 0;i < 16;i++)
+            for(int i = 0;i < 8;i++)
                 m_banks.Add(new byte[1024]);
             m_spindexes = new byte[0x20];
             m_sprites = new byte[0x100];
@@ -140,12 +140,70 @@ namespace NesTry
             m_oamaddr = 0;
             m_pseudo = 0;
         }
-        public void Reset()
+        public void Reset(ref byte []  video_memory, ref byte []  video_memory_ex,RomInfo romInfo)
         {
+            Setup_Nametable_Bank(ref video_memory,ref video_memory_ex, romInfo);
             Array.Copy(m_banks[0x8], 0, m_banks[0xc], 0, 1024);
             Array.Copy(m_banks[0x9], 0, m_banks[0xd], 0, 1024);
             Array.Copy(m_banks[0xa], 0, m_banks[0xe], 0, 1024);
             Array.Copy(m_banks[0xb], 0, m_banks[0xf], 0, 1024);
+        }
+        /// <summary>
+        /// SFCs the switch nametable mirroring.
+        /// </summary>
+        /// <param name="famicom">The famicom.</param>
+        /// <param name="mode">The mode.</param>
+        private void Switch_Nametable_Mirroring(ref byte[] video_memory, ref byte[] video_memory_ex, nametable_mirroring_mode mode)
+        {
+            switch (mode)
+            {
+                case nametable_mirroring_mode.SFC_NT_MIR_SingleLow:
+                    m_banks.Add(video_memory);
+                    m_banks.Add(video_memory);
+                    m_banks.Add(video_memory);
+                    m_banks.Add(video_memory);
+                    break;
+                case nametable_mirroring_mode.SFC_NT_MIR_SingleHigh:
+                    m_banks.Add(video_memory);
+                    m_banks.Add(video_memory);
+                    m_banks.Add(video_memory);
+                    m_banks.Add(video_memory); ;
+                    break;
+                case nametable_mirroring_mode.SFC_NT_MIR_Vertical:
+                    m_banks.Add(video_memory);
+                    m_banks.Add(video_memory);
+                    m_banks.Add(video_memory);
+                    m_banks.Add(video_memory);
+                    break;
+                case nametable_mirroring_mode.SFC_NT_MIR_Horizo​​ntal:
+                    m_banks.Add(video_memory);
+                    m_banks.Add(video_memory);
+                    m_banks.Add(video_memory);
+                    m_banks.Add(video_memory);
+                    break;
+                case nametable_mirroring_mode.SFC_NT_MIR_FourScreen:
+                    m_banks.Add(video_memory);
+                    m_banks.Add(video_memory);
+                    m_banks.Add(video_memory_ex);
+                    m_banks.Add(video_memory_ex);
+                    break;
+            }
+            // 鏡像
+            m_banks.Add(m_banks[0x8]);
+            m_banks.Add(m_banks[0x9]);
+            m_banks.Add(m_banks[0xa]);
+            m_banks.Add(m_banks[0xb]);
+        }
+        /// <summary>
+        /// StepFC: 設置名稱表用倉庫
+        /// </summary>
+        /// <param name="famicom">The famicom.</param>
+        private void Setup_Nametable_Bank(ref byte[] video_memory, ref byte[] video_memory_ex, RomInfo romInfo)
+        {
+            Switch_Nametable_Mirroring(ref video_memory,ref video_memory_ex,
+                romInfo.four_screen ? (nametable_mirroring_mode.SFC_NT_MIR_FourScreen) :
+                (romInfo.vmirroring ? nametable_mirroring_mode.SFC_NT_MIR_Vertical : nametable_mirroring_mode.SFC_NT_MIR_Horizontal)
+            );
         }
         // read ppu register via cpu address space
         public byte Read_PPU_Register_Via_CPU(UInt16 address)

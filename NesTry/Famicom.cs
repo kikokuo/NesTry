@@ -94,8 +94,6 @@ namespace NesTry
         public byte[] button_states = new byte[16];
         // 預設按鍵對映
         public Dictionary<Key, int> button_key_map = new Dictionary<Key, int>();
-        // 預設調色盤
-        UInt32[] m_palette_data;
         //long m_line = 0;
         //public StreamWriter sw;
         public long cpu_cycle_count;
@@ -128,7 +126,6 @@ namespace NesTry
 
         public Famicom()
         {
-            m_palette_data = new UInt32[16];
             m_video_memory = new byte[2048];
             m_video_memory_ex = new byte[2048];
             prg_banks = new List<byte[]>();
@@ -189,44 +186,12 @@ namespace NesTry
                 button_states[index] = data;
         }
         
-        /// <summary>
-        /// StepFC: 設置名稱表用倉庫
-        /// </summary>
-        /// <param name="famicom">The famicom.</param>
-        public void Fc_Setup_NameTable_Bank()
-        {
-            // 4屏
-            if (m_nesrom.m_romInfo.four_screen)
-            {
-                Array.Copy(m_video_memory, 0x400 * 0, m_ppu.m_banks[0x8], 0, 1024);
-                Array.Copy(m_video_memory, 0x400 * 1, m_ppu.m_banks[0x9], 0, 1024);
-                Array.Copy(m_video_memory_ex, 0x400 * 0, m_ppu.m_banks[0xa], 0, 1024);
-                Array.Copy(m_video_memory_ex, 0x400 * 1, m_ppu.m_banks[0xb], 0, 1024);
-            }
-            // 橫版
-            else if (m_nesrom.m_romInfo.vmirroring)
-            {
-                Array.Copy(m_video_memory, 0x400 * 0, m_ppu.m_banks[0x8], 0, 1024);
-                Array.Copy(m_video_memory, 0x400 * 1, m_ppu.m_banks[0x9], 0, 1024);
-                Array.Copy(m_video_memory, 0x400 * 0, m_ppu.m_banks[0xa], 0, 1024);
-                Array.Copy(m_video_memory, 0x400 * 1, m_ppu.m_banks[0xb], 0, 1024);
-            }
-            // 縱版
-            else
-            {
-                Array.Copy(m_video_memory, 0x400 * 0, m_ppu.m_banks[0x8], 0, 1024);
-                Array.Copy(m_video_memory, 0x400 * 0, m_ppu.m_banks[0x9], 0, 1024);
-                Array.Copy(m_video_memory, 0x400 * 1, m_ppu.m_banks[0xa], 0, 1024);
-                Array.Copy(m_video_memory, 0x400 * 1, m_ppu.m_banks[0xb], 0, 1024);
-            }
-        }
         public bool Reset()
         {
             // 重置mapper
             if (!m_mapper.Reset(ref this.prg_banks,ref m_ppu.m_banks, this.m_nesrom.m_romInfo)) return false;
             if (!m_cpu.Reset()) return false;
-            //Fc_Setup_NameTable_Bank();
-            m_ppu.Reset();
+            m_ppu.Reset(ref m_video_memory,ref m_video_memory_ex,this.m_nesrom.m_romInfo);
             m_apu.Reset();
             return true;
         }
