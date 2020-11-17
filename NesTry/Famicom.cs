@@ -544,28 +544,28 @@ namespace NesTry
         {
             // 0 - D7
             byte low0 = (byte)(((p0 & 0x80) >> 6) | ((p1 & 0x80) >> 5));
-            if ((~output[0 + index] & 1) > 0) output[0 + index] = (byte)(high | low0);
+            if ((~output[0 + index] & 1) > 0 && low0 > 0) output[0 + index] = (byte)(high | low0 | 1);
             // 1 - D6
             byte low1 = (byte)(((p0 & 0x40) >> 5) | ((p1 & 0x40) >> 4));
-            if ((~output[1 + index] & 1) > 0) output[1 + index] = (byte)(high | low1);
+            if ((~output[1 + index] & 1) > 0 && low1 > 0) output[1 + index] = (byte)(high | low1 | 1);
             // 2 - D5
             byte low2 = (byte)(((p0 & 0x20) >> 4) | ((p1 & 0x20) >> 3));
-            if ((~output[2 + index] & 1) > 0) output[2 + index] = (byte)(high | low2);
+            if ((~output[2 + index] & 1) > 0 && low2 > 0) output[2 + index] = (byte)(high | low2 | 1);
             // 3 - D4
             byte low3 = (byte)(((p0 & 0x10) >> 3) | ((p1 & 0x10) >> 2));
-            if ((~output[3 + index] & 1) > 0) output[3 + index] = (byte)(high | low3);
+            if ((~output[3 + index] & 1) > 0 && low3 > 0) output[3 + index] = (byte)(high | low3 | 1);
             // 4 - D3
             byte low4 = (byte)(((p0 & 0x08) >> 2) | ((p1 & 0x08) >> 1));
-            if ((~output[4 + index] & 1) > 0) output[4 + index] = (byte)(high | low4);
+            if ((~output[4 + index] & 1) > 0 && low4 > 0) output[4 + index] = (byte)(high | low4 | 1);
             // 5 - D2
             byte low5 = (byte)(((p0 & 0x04) >> 1) | ((p1 & 0x04) >> 0));
-            if ((~output[5 + index] & 1) > 0) output[5 + index] = (byte)(high | low5);
+            if ((~output[5 + index] & 1) > 0 && low5 > 0) output[5 + index] = (byte)(high | low5 | 1);
             // 6 - D1
             byte low6 = (byte)(((p0 & 0x02) >> 0) | ((p1 & 0x02) << 1));
-            if ((~output[6 + index] & 1) > 0) output[6 + index] = (byte)(high | low6);
+            if ((~output[6 + index] & 1) > 0 && low6 > 0) output[6 + index] = (byte)(high | low6 | 1);
             // 7 - D0
             byte low7 = (byte)(((p0 & 0x01) << 1) | ((p1 & 0x01) << 2));
-            if ((~output[7 + index] & 1) > 0) output[7 + index] = (byte)(high | low7);
+            if ((~output[7 + index] & 1) > 0 && low7 > 0) output[7 + index] = (byte)(high | low7 | 1);
         }
 
         /// <summary>
@@ -614,28 +614,28 @@ namespace NesTry
         {
             // 0 - D7
             byte low0 = (byte)(((p0 & 0x80) >> 6) | ((p1 & 0x80) >> 5));
-            if ((~output[7 + index] & 1) > 0) output[7 + index] = (byte)(high | low0);
+            if ((~output[7 + index] & 1) > 0 && low0 > 0) output[7 + index] = (byte)(high | low0 | 1);
             // 1 - D6
             byte low1 = (byte)(((p0 & 0x40) >> 5) | ((p1 & 0x40) >> 4));
-            if ((~output[6 + index] & 1) > 0) output[6 + index] = (byte)(high | low1);
+            if ((~output[6 + index] & 1) > 0 && low1 > 0) output[6 + index] = (byte)(high | low1 | 1);
             // 2 - D5
             byte low2 = (byte)(((p0 & 0x20) >> 4) | ((p1 & 0x20) >> 3));
-            if ((~output[5 + index] & 1) > 0) output[5 + index] = (byte)(high | low2);
+            if ((~output[5 + index] & 1) > 0 && low2 > 0) output[5 + index] = (byte)(high | low2 | 1);
             // 3 - D4
             byte low3 = (byte)(((p0 & 0x10) >> 3) | ((p1 & 0x10) >> 2));
-            if ((~output[4 + index] & 1) > 0) output[4 + index] = (byte)(high | low3);
+            if ((~output[4 + index] & 1) > 0 && low3 > 0) output[4 + index] = (byte)(high | low3 | 1);
             // 4 - D3
             byte low4 = (byte)(((p0 & 0x08) >> 2) | ((p1 & 0x08) >> 1));
-            if ((~output[3 + index] & 1) > 0) output[3 + index] = (byte)(high | low4);
+            if ((~output[3 + index] & 1) > 0 && low4 > 0) output[3 + index] = (byte)(high | low4 | 1);
             // 5 - D2
             byte low5 = (byte)(((p0 & 0x04) >> 1) | ((p1 & 0x04) >> 0));
-            if ((~output[2 + index] & 1) > 0) output[2 + index] = (byte)(high | low5);
+            if ((~output[2 + index] & 1) > 0 && low5 > 0) output[2 + index] = (byte)(high | low5 | 1);
             // 6 - D1
             byte low6 = (byte)(((p0 & 0x02) >> 0) | ((p1 & 0x02) << 1));
-            if ((~output[1 + index] & 1) > 0) output[1 + index] = (byte)(high | low6);
+            if ((~output[1 + index] & 1) > 0 && low6 > 0) output[1 + index] = (byte)(high | low6 | 1);
             // 7 - D0
             byte low7 = (byte)(((p0 & 0x01) << 1) | ((p1 & 0x01) << 2));
-            if ((~output[0 + index] & 1) > 0) output[0 + index] = (byte)(high | low7);
+            if ((~output[0 + index] & 1) > 0 && low7 > 0) output[0 + index] = (byte)(high | low7 | 1);
         }
 
         /// <summary>
