@@ -66,6 +66,8 @@ namespace NesTry
         public Nes6502 m_nes6502;
         public NesAPU m_apu;
         public NesXAudio2 m_audio;
+        public NesConfig NTSC = new NesConfig(1789773.0f,60,1364,1024,340,240,20);
+        public NesConfig PAL = new NesConfig(1662607.0f, 50, 1362, 1024, 338, 312, 70);
         // PPU
         public NesPPU  m_ppu;
         public byte [] m_mainMemory;
@@ -772,21 +774,21 @@ namespace NesTry
 
         public void render_frame_easy(ref byte[] buffer)
         {
-            UInt16 vblank_line = 240;
-            UInt32 per_scanline = 1364;
+            UInt16 vblank_line = NTSC.vblank_scanline;
+            UInt32 per_scanline = NTSC.master_cycle_per_scanline;
             UInt32 end_cycle_count = 0;
 
             //hit test
-            byte []sp0_hittest_buffer = new byte[256];
+            byte []sp0_hittest_buffer = new byte[(int)config_constant.NES_WIDTH];
             Sprite0_Hittest(ref sp0_hittest_buffer);
 
             UInt16 overflow_line = Sprite_Overflow_test();
             if (!((m_ppu.m_mask & (byte)Fc_ppu_flag.FC_PPU2001_Back)> 0))
-                Array.Clear(buffer, 0, 256 * 240);
+                Array.Clear(buffer, 0, (int)config_constant.NES_WIDTH * (int)config_constant.NES_HEIGHT);
 
 
             int index_buffer = 0;
-            for (UInt16 i = 0; i != 240; ++i)
+            for (UInt16 i = 0; i != (int)config_constant.NES_HEIGHT; ++i)
             {
                 end_cycle_count += per_scanline;
                 UInt32 end_cycle_count_this_round = end_cycle_count / Master_Cycle_Per_CPU;
@@ -800,12 +802,11 @@ namespace NesTry
                 for (; cpu_cycle_count < end_cycle_count_this_round;)
                     m_nes6502.Fc_cpu_execute_one();
 
-
                 if (m_ppu.CheckRenderBackground())
                     m_ppu.RunFreeCycle();
 
                 m_mapper.Hsync();
-                index_buffer += 256;
+                index_buffer += (int)config_constant.NES_WIDTH;
                 if(i% 66 == 65)
                 m_apu.sfc_trigger_frame_counter();
             }
@@ -860,7 +861,7 @@ namespace NesTry
         {
 
             byte BOTH_BS = (byte)(Fc_ppu_flag.FC_PPU2001_Sprite | Fc_ppu_flag.FC_PPU2001_Back);
-            if ((m_ppu.m_mask & BOTH_BS) != BOTH_BS) return 240;
+            if ((m_ppu.m_mask & BOTH_BS) != BOTH_BS) return (int)config_constant.NES_WIDTH;
             
             byte [] buffer = new byte[256 + 16];
             // 8 x 16
