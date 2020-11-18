@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Text;
 
 namespace NesTry
@@ -138,23 +139,48 @@ namespace NesTry
 
         public Fc_error_code ReadRom()
         {
-            Fc_error_code err  =  Fc_error_code.FC_ERROR_OK;
+            Fc_error_code err = Fc_error_code.FC_ERROR_OK;
             if (!File.Exists(m_romName))
-                return Fc_error_code.FC_ERROR_FILE_NOT_FOUND; 
-            // store FileStream to check current position
-            using (FileStream s = File.OpenRead(m_romName))
+                return Fc_error_code.FC_ERROR_FILE_NOT_FOUND;
+            if (m_romName.Contains(".zip")) { 
+                using (ZipArchive archive = ZipFile.OpenRead(m_romName))
+                {
+                    foreach (ZipArchiveEntry entry in archive.Entries)
+                    {
+                        if (entry.FullName.EndsWith(".nes", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // store FileStream to check current position
+                            using (BinaryReader r = new BinaryReader(entry.Open()))
+                            {
+                                err = ReadHead(r);
+                                if (err != Fc_error_code.FC_ERROR_OK)
+                                    return err;
+                                err = ReadRomBody(r);
+                                if (err != Fc_error_code.FC_ERROR_OK)
+                                    return err;
+                            }
+                        }
+                    }
+                }
+            }
+            else
             {
-                // and BinareReader to read values
-                using BinaryReader r = new BinaryReader(s);
-                err = ReadHead(r);
-                if (err != Fc_error_code.FC_ERROR_OK)
-                    return err;
-                err = ReadRomBody(r);
-                if (err != Fc_error_code.FC_ERROR_OK)
-                    return err;
+                // store FileStream to check current position
+                using (FileStream s = File.OpenRead(m_romName))
+                {
+                    // and BinareReader to read values
+                    using (BinaryReader r = new BinaryReader(s))
+                    {
+                        err = ReadHead(r);
+                        if (err != Fc_error_code.FC_ERROR_OK)
+                            return err;
+                        err = ReadRomBody(r);
+                        if (err != Fc_error_code.FC_ERROR_OK)
+                            return err;
+                    }
+                }
             }
             return err;
         }
-         
     }
 }

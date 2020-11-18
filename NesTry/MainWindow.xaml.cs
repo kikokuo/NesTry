@@ -105,7 +105,7 @@ namespace NesTry
         {
             Fc_error_code err = Fc_error_code.FC_ERROR_OK;
             OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "Nes files (*.nes)|*.nes|All files (*.*)|*.*";
+            openFileDialog.Filter = "Zip files (*.zip)|*.zip|Nes files (*.nes)|*.nes|All files (*.*)|*.*";
             if (openFileDialog.ShowDialog() == true)
             {
                 err = famicom.LoadRom(openFileDialog.FileName);

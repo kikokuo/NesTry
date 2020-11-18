@@ -651,7 +651,7 @@ namespace NesTry
 
                 UInt16 nowp0_ind = bank_ind[(iiii>>6)|(iiii&0x1)<<2];
                 UInt32 nowp0 = (UInt32)((iiii & 0x3E) * 16);
-                if (((iiii >> 6) | (iiii & 0x1) << 2) >= 4)
+                if (nowp0_ind >= 4)
                     nowp0 += sppbuffer_2;
 
                 UInt32 nowp1 = (UInt32)(nowp0 + 8);
@@ -662,7 +662,7 @@ namespace NesTry
                     case 0x8:   
                          for (int j = 0; j != 8; ++j)
                             Sprite_Expand_8_On(m_ppu.m_banks[nowp0_ind][nowp0+j + 16], m_ppu.m_banks[nowp0_ind][nowp1+j + 16], high, ref buffer,write + (int)config_constant.NES_WIDTH * (j + 8));
-                        break;
+                         goto case 0x0;
                     case 0x0:
                         for (int j = 0; j != 8; ++j)
                            Sprite_Expand_8_On(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + (int)config_constant.NES_WIDTH * j);
@@ -670,7 +670,7 @@ namespace NesTry
                     case 0x9:   
                         for (int j = 0; j != 8; ++j)
                             Sprite_Expand_8_Op(m_ppu.m_banks[nowp0_ind][nowp0 + j+16], m_ppu.m_banks[nowp0_ind][nowp1 + j+16], high, ref buffer, write + (int)config_constant.NES_WIDTH * (j + 8));
-                        break;
+                        goto case 0x1;
                     case 0x1:
                         // 0001: 后
                         for (int j = 0; j != 8; ++j)
@@ -680,7 +680,7 @@ namespace NesTry
                         // 1010: 8x16 水平翻转 前 
                         for (int j = 0; j != 8; ++j)
                             Sprite_Expand_8_Rn(m_ppu.m_banks[nowp0_ind][nowp0 + j + 16], m_ppu.m_banks[nowp0_ind][nowp1 + j + 16], high, ref buffer, write + (int)config_constant.NES_WIDTH * (j + 8));
-                        break;
+                        goto case 0x2;
                     case 0x2: 
                         // 0010: 水平翻转 前 
                         for (int j = 0; j != 8; ++j)
@@ -690,7 +690,7 @@ namespace NesTry
                         // 1011: 8x16 水平翻转 后
                         for (int j = 0; j != 8; ++j)
                             Sprite_Expand_8_Rp(m_ppu.m_banks[nowp0_ind][nowp0 + j + 16], m_ppu.m_banks[nowp0_ind][nowp1 + j + 16], high, ref buffer, write + (int)config_constant.NES_WIDTH * (j + 8));
-                        break;
+                        goto case 0x3;
                     case 0x3:  
                         // 0011: 水平翻转 后
                         for (int j = 0; j != 8; ++j)
