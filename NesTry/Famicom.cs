@@ -625,18 +625,6 @@ namespace NesTry
 
             byte sppbuffer_0 = (byte)(sp8x16 > 0 ? 0 : ((m_ppu.m_ctrl & (byte)Fc_ppu_flag.FC_PPU2000_SpTabl) > 0 ? 4 : 0));
             byte sppbuffer_1 = (byte)(sp8x16 > 0 ? 4 : sppbuffer_0);
-            byte sppbuffer_2 = (byte)(sp8x16 > 0 ? 0 : 16);
-
-            byte[] bank_ind = new byte[8];
-
-            bank_ind[0] = sppbuffer_0;
-            bank_ind[1] = (byte)(sppbuffer_0 + 1);
-            bank_ind[2] = (byte)(sppbuffer_0 + 2);
-            bank_ind[3] = (byte)(sppbuffer_0 + 3);
-            bank_ind[4] = sppbuffer_1;
-            bank_ind[5] = (byte)(sppbuffer_1 + 1);
-            bank_ind[6] = (byte)(sppbuffer_1 + 2);
-            bank_ind[7] = (byte)(sppbuffer_1 + 3);
 
             for (int index = 0; index != 64; ++index)
             {
@@ -649,10 +637,13 @@ namespace NesTry
                 byte xxxx = m_ppu.m_sprites[sprints_base + 3];
                 byte high = (byte)(((aaaa & 3) | 4) << 3);
 
-                UInt16 nowp0_ind = bank_ind[(iiii>>6)|(iiii&0x1)<<2];
-                UInt32 nowp0 = (UInt32)((iiii & 0x3E) * 16);
-                if (nowp0_ind >= 4)
-                    nowp0 += sppbuffer_2;
+                UInt16 nowp0_ind = (iiii & 1) > 0 ? sppbuffer_1 : sppbuffer_0;
+                UInt32 nowp0 = (UInt32)((iiii & 0xFE) * 16);
+                if ((iiii & 1) > 0 && !(sp8x16 > 0))
+                    nowp0 += 16;
+                byte ind_0 = (byte)(nowp0 / 1024);
+                nowp0_ind += ind_0;
+                nowp0 = nowp0 % 1024;
 
                 UInt32 nowp1 = (UInt32)(nowp0 + 8);
                 int write = (int)(xxxx + (yyyy + 1) * (int)config_constant.NES_WIDTH);
