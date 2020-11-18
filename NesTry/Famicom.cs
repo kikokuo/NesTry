@@ -189,17 +189,20 @@ namespace NesTry
             m_apu.Reset();
             return true;
         }
-        public bool LoadRom(string romname)
+        public Fc_error_code LoadRom(string romname)
         {
+            Fc_error_code err = Fc_error_code.FC_ERROR_OK;
             ClearRom();
             m_nesrom = new NesRom(romname);
-            if (!m_nesrom.ReadRom())
-                return false;
+            err = m_nesrom.ReadRom();
+            if (err != Fc_error_code.FC_ERROR_OK)
+                return err;
             m_mapper = null;
             m_mapper = new RomMapper();
-            if (m_mapper.LoadMapper(ref m_ppu,ref prg_banks, ref m_ppu.m_banks, m_nesrom.m_romInfo) != Fc_error_code.FC_ERROR_OK)
-                return false;
-            return true;
+            err = m_mapper.LoadMapper(ref m_ppu, ref prg_banks, ref m_ppu.m_banks, m_nesrom.m_romInfo);
+            if( err != Fc_error_code.FC_ERROR_OK)
+                return err;
+            return err;
         }
 
         public void ClearRom()
@@ -237,7 +240,7 @@ namespace NesTry
 
             byte iiiii = m_ppu.m_sprites[1];
             byte sp8x16 = (byte)(m_ppu.m_ctrl & (byte)Fc_ppu_flag.FC_PPU2000_Sp8x16);
-            byte spp = (byte)(sp8x16 > 0 ? ((iiiii & 1) > 0 ? 4 : 0) :((m_ppu.m_ctrl & (byte)Fc_ppu_flag.FC_PPU2000_SpTabl) > 0? 4 : 0));
+            byte spp_base = (byte)(sp8x16 > 0 ? ((iiiii & 1) > 0 ? 4 : 0) :((m_ppu.m_ctrl & (byte)Fc_ppu_flag.FC_PPU2000_SpTabl) > 0? 4 : 0));
             byte aaaaa = m_ppu.m_sprites[2];
 
             UInt32 nowp0 = (uint)(iiiii * 16);
@@ -247,21 +250,33 @@ namespace NesTry
             UInt16 buffer_write = (UInt16)(yyyyy + 1);
             // 8x16的情况
             UInt16 count = (UInt16)(sp8x16 > 0? 16 : 8);
-            spp += (byte)ind;
+            spp_base += (byte)ind;
             if ((aaaaa & (byte)Fc_ppu_flag.FC_SPATTR_FlipH) > 0)
             {
                 for (int i = 0; i != count; ++i)
                 {
-                    byte data = (byte)(m_ppu.m_banks[spp][nowp0 + i] | m_ppu.m_banks[spp][nowp1 + i]);
+                    UInt32 new_p0 = (uint)(nowp0 + i);
+                    byte ind_1 = (byte)(new_p0 / 1024);
+                    new_p0 = new_p0 % 1024;
+                    UInt32 new_p1 = (uint)(nowp1 + i);
+                    byte ind_2 = (byte)(new_p1 / 1024);
+                    new_p1 = new_p1 % 1024;
+                    byte data = (byte)(m_ppu.m_banks[spp_base + ind_1][new_p0] | m_ppu.m_banks[spp_base + ind_2][nowp1]);
                     buffer[buffer_write+i] = BitReverseTable256[data];
                 }
-
             }
             else
             {
                 for (int i = 0; i != count; ++i)
                 {
-                    byte data = (byte)(m_ppu.m_banks[spp][nowp0 + i] | m_ppu.m_banks[spp][nowp1 + i]);
+                    UInt32 new_p0 = (uint)(nowp0 + i);
+                    byte ind_1 = (byte)(new_p0 / 1024);
+                    new_p0 = new_p0 % 1024;
+                    UInt32 new_p1 = (uint)(nowp1 + i);
+                    byte ind_2 = (byte)(new_p1 / 1024);
+                    new_p1 = new_p1 % 1024;
+
+                    byte data = (byte)(m_ppu.m_banks[spp_base+ ind_1][new_p0] | m_ppu.m_banks[spp_base+ ind_2][new_p1]);
                     buffer[buffer_write + i] = data;
                 }
             }
@@ -640,92 +655,92 @@ namespace NesTry
                     nowp0 += sppbuffer_2;
 
                 UInt32 nowp1 = (UInt32)(nowp0 + 8);
-                int write = (int)(xxxx + (yyyy + 1) * 256);
+                int write = (int)(xxxx + (yyyy + 1) * (int)config_constant.NES_WIDTH);
                 // hVHP
                 switch (((byte)(aaaa >> 5) | sp8x16) & (byte)0x0f)
                 {
                     case 0x8:   
                          for (int j = 0; j != 8; ++j)
-                            Sprite_Expand_8_On(m_ppu.m_banks[nowp0_ind][nowp0+j + 16], m_ppu.m_banks[nowp0_ind][nowp1+j + 16], high, ref buffer,write + 256 * (j + 8));
+                            Sprite_Expand_8_On(m_ppu.m_banks[nowp0_ind][nowp0+j + 16], m_ppu.m_banks[nowp0_ind][nowp1+j + 16], high, ref buffer,write + (int)config_constant.NES_WIDTH * (j + 8));
                         break;
                     case 0x0:
                         for (int j = 0; j != 8; ++j)
-                           Sprite_Expand_8_On(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + 256 * j);
+                           Sprite_Expand_8_On(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + (int)config_constant.NES_WIDTH * j);
                         break;
                     case 0x9:   
                         for (int j = 0; j != 8; ++j)
-                            Sprite_Expand_8_Op(m_ppu.m_banks[nowp0_ind][nowp0 + j+16], m_ppu.m_banks[nowp0_ind][nowp1 + j+16], high, ref buffer, write + 256 * (j + 8));
+                            Sprite_Expand_8_Op(m_ppu.m_banks[nowp0_ind][nowp0 + j+16], m_ppu.m_banks[nowp0_ind][nowp1 + j+16], high, ref buffer, write + (int)config_constant.NES_WIDTH * (j + 8));
                         break;
                     case 0x1:
                         // 0001: 后
                         for (int j = 0; j != 8; ++j)
-                            Sprite_Expand_8_Op(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + 256 * j);
+                            Sprite_Expand_8_Op(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + (int)config_constant.NES_WIDTH * j);
                         break;
                     case 0xA:    
                         // 1010: 8x16 水平翻转 前 
                         for (int j = 0; j != 8; ++j)
-                            Sprite_Expand_8_Rn(m_ppu.m_banks[nowp0_ind][nowp0 + j + 16], m_ppu.m_banks[nowp0_ind][nowp1 + j + 16], high, ref buffer, write + 256 * (j + 8));
+                            Sprite_Expand_8_Rn(m_ppu.m_banks[nowp0_ind][nowp0 + j + 16], m_ppu.m_banks[nowp0_ind][nowp1 + j + 16], high, ref buffer, write + (int)config_constant.NES_WIDTH * (j + 8));
                         break;
                     case 0x2: 
                         // 0010: 水平翻转 前 
                         for (int j = 0; j != 8; ++j)
-                            Sprite_Expand_8_Rn(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + 256 * j);
+                            Sprite_Expand_8_Rn(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + (int)config_constant.NES_WIDTH * j);
                         break;
                     case 0xB:    
                         // 1011: 8x16 水平翻转 后
                         for (int j = 0; j != 8; ++j)
-                            Sprite_Expand_8_Rp(m_ppu.m_banks[nowp0_ind][nowp0 + j + 16], m_ppu.m_banks[nowp0_ind][nowp1 + j + 16], high, ref buffer, write + 256 * (j + 8));
+                            Sprite_Expand_8_Rp(m_ppu.m_banks[nowp0_ind][nowp0 + j + 16], m_ppu.m_banks[nowp0_ind][nowp1 + j + 16], high, ref buffer, write + (int)config_constant.NES_WIDTH * (j + 8));
                         break;
                     case 0x3:  
                         // 0011: 水平翻转 后
                         for (int j = 0; j != 8; ++j)
-                            Sprite_Expand_8_Rp(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + 256 * j);
+                            Sprite_Expand_8_Rp(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + (int)config_constant.NES_WIDTH * j);
                         break;
                     case 0xC:
                         for (int j = 0; j != 8; ++j)
-                            Sprite_Expand_8_On(m_ppu.m_banks[nowp0_ind][nowp0 + j + 16], m_ppu.m_banks[nowp0_ind][nowp1 + j + 16], high, ref buffer, write + 256 * (7 - j));
+                            Sprite_Expand_8_On(m_ppu.m_banks[nowp0_ind][nowp0 + j + 16], m_ppu.m_banks[nowp0_ind][nowp1 + j + 16], high, ref buffer, write + (int)config_constant.NES_WIDTH * (7 - j));
                         for (int j = 0; j != 8; ++j)
-                            Sprite_Expand_8_On(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + 256 * (15 - j));
+                            Sprite_Expand_8_On(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + (int)config_constant.NES_WIDTH * (15 - j));
                         break;
                     case 0x4:
                         for (int j = 0; j != 8; ++j)
-                            Sprite_Expand_8_On(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + 256 * (7 - j));
+                            Sprite_Expand_8_On(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + (int)config_constant.NES_WIDTH * (7 - j));
                         break;
                     case 0xD:
                         // 1101: 8x16 垂直翻转 后
                         for (int j = 0; j != 8; ++j)
-                            Sprite_Expand_8_Op(m_ppu.m_banks[nowp0_ind][nowp0 + j + 16], m_ppu.m_banks[nowp0_ind][nowp1 + j + 16], high, ref buffer, write + 256 * (7 - j));
+                            Sprite_Expand_8_Op(m_ppu.m_banks[nowp0_ind][nowp0 + j + 16], m_ppu.m_banks[nowp0_ind][nowp1 + j + 16], high, ref buffer, write + (int)config_constant.NES_WIDTH * (7 - j));
                         for (int j = 0; j != 8; ++j)
-                            Sprite_Expand_8_Op(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + 256 * (15 - j));
+                            Sprite_Expand_8_Op(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + (int)config_constant.NES_WIDTH * (15 - j));
                         break;
                     case 0x5:
                         // 0101: 垂直翻转 后
                         for (int j = 0; j != 8; ++j)
-                            Sprite_Expand_8_Op(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + 256 * (7 - j));
+                            Sprite_Expand_8_Op(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + (int)config_constant.NES_WIDTH * (7 - j));
                         break;
                     case 0xE:
                         // 1110: 8x16 垂直翻转 水平翻转 前 
                         for (int j = 0; j != 8; ++j)
-                            Sprite_Expand_8_Rn(m_ppu.m_banks[nowp0_ind][nowp0 + j + 16], m_ppu.m_banks[nowp0_ind][nowp1 + j + 16], high, ref buffer, write + 256 * (7 - j));
+                            Sprite_Expand_8_Rn(m_ppu.m_banks[nowp0_ind][nowp0 + j + 16], m_ppu.m_banks[nowp0_ind][nowp1 + j + 16], high, ref buffer, write + (int)config_constant.NES_WIDTH * (7 - j));
                         for (int j = 0; j != 8; ++j)
-                            Sprite_Expand_8_Rn(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + 256 * (15 - j));
+                            Sprite_Expand_8_Rn(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + (int)config_constant.NES_WIDTH * (15 - j));
                         break;
                     case 0x6:
                         // 0110: 8x16 垂直翻转 水平翻转 前 
                         for (int j = 0; j != 8; ++j)
-                            Sprite_Expand_8_Rn(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + 256 * (7 - j));
+                            Sprite_Expand_8_Rn(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + (int)config_constant.NES_WIDTH * (7 - j));
                         break;
                     case 0xF:
                         // 1111: 8x16 垂直翻转 水平翻转 后
                         for (int j = 0; j != 8; ++j)
-                            Sprite_Expand_8_Rp(m_ppu.m_banks[nowp0_ind][nowp0 + j + 16], m_ppu.m_banks[nowp0_ind][nowp1 + j + 16], high, ref buffer, write + 256 * (7 - j));
+                            Sprite_Expand_8_Rp(m_ppu.m_banks[nowp0_ind][nowp0 + j + 16], m_ppu.m_banks[nowp0_ind][nowp1 + j + 16], high, ref buffer, write + (int)config_constant.NES_WIDTH * (7 - j));
                         for (int j = 0; j != 8; ++j)
-                            Sprite_Expand_8_Rp(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + 256 * (15 - j));
+                            Sprite_Expand_8_Rp(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + (int)config_constant.NES_WIDTH * (15 - j));
                         break;
                     case 0x7:
                         // 0111: 垂直翻转 水平翻转 后
                         for (int j = 0; j != 8; ++j)
-                            Sprite_Expand_8_Rp(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + 256 * (7 - j));
+                            Sprite_Expand_8_Rp(m_ppu.m_banks[nowp0_ind][nowp0 + j], m_ppu.m_banks[nowp0_ind][nowp1 + j], high, ref buffer, write + (int)config_constant.NES_WIDTH * (7 - j));
                         break;
                 }
             }

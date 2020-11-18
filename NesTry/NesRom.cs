@@ -65,7 +65,9 @@ namespace NesTry
         FC_ERROR_MAPPER_NOT_FOUND,
         FC_ERROR_FILE_NOT_FOUND,
         FC_ERROR_ILLEGAL_FILE,
-        FC_ERROR_UNSUPPORT,
+        FC_ERROR_UNSUPPORT_TRAINER,
+        FC_ERROR_UNSUPPORT_VS_UNISYSTEM,
+        FC_ERROR_UNSUPPORT_Playchoice10,
     };
     public class NesRom
     {
@@ -90,11 +92,11 @@ namespace NesTry
             m_romHead.control2 = r.ReadByte();
 
             if ((m_romHead.control1 & (byte)Contorl_1.NES_TRAINER) > 0)
-                return Fc_error_code.FC_ERROR_UNSUPPORT;
+                return Fc_error_code.FC_ERROR_UNSUPPORT_TRAINER;
             if ((m_romHead.control2 & (byte)Control_2.NES_VS_UNISYSTEM) > 0)
-                return Fc_error_code.FC_ERROR_UNSUPPORT;
+                return Fc_error_code.FC_ERROR_UNSUPPORT_VS_UNISYSTEM;
             if ((m_romHead.control2 & (byte)Control_2.NES_Playchoice10) > 0)
-                return Fc_error_code.FC_ERROR_UNSUPPORT;
+                return Fc_error_code.FC_ERROR_UNSUPPORT_Playchoice10;
 
             m_romHead.mapper_variant = r.ReadByte();
             m_romHead.upper_rom_size = r.ReadByte();
@@ -134,22 +136,24 @@ namespace NesTry
             return Fc_error_code.FC_ERROR_OK;
         }
 
-        public bool ReadRom()
+        public Fc_error_code ReadRom()
         {
+            Fc_error_code err  =  Fc_error_code.FC_ERROR_OK;
             if (!File.Exists(m_romName))
-                return false; 
+                return Fc_error_code.FC_ERROR_FILE_NOT_FOUND; 
             // store FileStream to check current position
             using (FileStream s = File.OpenRead(m_romName))
             {
                 // and BinareReader to read values
                 using BinaryReader r = new BinaryReader(s);
-                if (ReadHead(r) != Fc_error_code.FC_ERROR_OK)
-                    return false;
-
-                if (ReadRomBody(r) != Fc_error_code.FC_ERROR_OK)
-                    return false;
+                err = ReadHead(r);
+                if (err != Fc_error_code.FC_ERROR_OK)
+                    return err;
+                err = ReadRomBody(r);
+                if (err != Fc_error_code.FC_ERROR_OK)
+                    return err;
             }
-            return true;
+            return err;
         }
          
     }

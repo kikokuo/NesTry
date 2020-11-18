@@ -103,13 +103,49 @@ namespace NesTry
 
         private void mnuOpen_Click(object sender, RoutedEventArgs e)
         {
+            Fc_error_code err = Fc_error_code.FC_ERROR_OK;
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "Nes files (*.nes)|*.nes|All files (*.*)|*.*";
             if (openFileDialog.ShowDialog() == true)
             {
-                famicom.LoadRom(openFileDialog.FileName);
-                famicom.Reset();
+                err = famicom.LoadRom(openFileDialog.FileName);
+                if(err == Fc_error_code.FC_ERROR_OK)
+                   famicom.Reset();
+                else
+                {
+                    AlertUserError(err);
+                }
             }
+        }
+
+        private void AlertUserError(Fc_error_code err)
+        {
+            String Msg = "";
+            switch(err)
+            {
+                case Fc_error_code.FC_ERROR_FAILED:
+                    Msg = "Some Error happen...";
+                    break;
+                case Fc_error_code.FC_ERROR_FILE_NOT_FOUND:
+                    Msg = "Not Found File...";
+                    break;
+                case Fc_error_code.FC_ERROR_ILLEGAL_FILE:
+                    Msg = "The File format was illegal...";
+                    break;
+                case Fc_error_code.FC_ERROR_MAPPER_NOT_FOUND:
+                    Msg = "Not support this mapper... Mapper Number: " + famicom.m_nesrom.m_romInfo.mapper_number;
+                    break;
+                case Fc_error_code.FC_ERROR_UNSUPPORT_TRAINER:
+                    Msg = "Not support this function:TRAINER";
+                    break;
+                case Fc_error_code.FC_ERROR_UNSUPPORT_VS_UNISYSTEM:
+                    Msg = "Not support this function:VS_UNISYSTEM";
+                    break;
+                case Fc_error_code.FC_ERROR_UNSUPPORT_Playchoice10:
+                    Msg = "Not support this function:Playchoice10";
+                    break;
+            }
+            MessageBox.Show(Msg, "ERROR");
         }
     }
 }

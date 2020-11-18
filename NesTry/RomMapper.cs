@@ -27,6 +27,12 @@ namespace NesTry
                 case 1:
                     mapperbase = new Mapper01(ref ppu);
                     return Fc_error_code.FC_ERROR_OK;
+                case 2:
+                    mapperbase = new Mapper02();
+                    return Fc_error_code.FC_ERROR_OK;
+                case 3:
+                    mapperbase = new Mapper03();
+                    return Fc_error_code.FC_ERROR_OK;
             }
             return Fc_error_code.FC_ERROR_MAPPER_NOT_FOUND;
         }
