@@ -18,6 +18,8 @@ namespace NesTry
         public Int32 count_chrrom_8kb;
         // Mapper 編號
         public int mapper_number;
+        //Submapper
+        public int sub_number;
         // 是否Vertical Mirroring(否即為水平)
         public bool vmirroring;
         // 是否FourScreen
@@ -75,10 +77,12 @@ namespace NesTry
         private readonly string m_romName;
         private RomHead m_romHead;
         public  RomInfo m_romInfo;
+        public bool m_loadromsuccess; 
 
         public NesRom(string romName)
         {
             m_romName = romName;
+            m_loadromsuccess = false;
         }
 
         private Fc_error_code ReadHead(BinaryReader r)
@@ -119,6 +123,7 @@ namespace NesTry
             m_romInfo.count_prgrom16kb = (int)prgrom16;
             m_romInfo.count_chrrom_8kb = (int)chrrom8;
             m_romInfo.mapper_number = m_romHead.control1 >> 4 | (m_romHead.control2 & 0xF0);
+            m_romInfo.sub_number = (m_romHead.mapper_variant & 0xF0) >> 4;
 
             m_romInfo.vmirroring = (m_romHead.control1 & (byte)Contorl_1.NES_VMIRROR) > 0;
             m_romInfo.four_screen = (m_romHead.control1 & (byte)Contorl_1.NES_4SCREEN) > 0;
@@ -142,25 +147,29 @@ namespace NesTry
             Fc_error_code err = Fc_error_code.FC_ERROR_OK;
             if (!File.Exists(m_romName))
                 return Fc_error_code.FC_ERROR_FILE_NOT_FOUND;
-            if (m_romName.Contains(".zip")) { 
-                using (ZipArchive archive = ZipFile.OpenRead(m_romName))
-                {
-                    foreach (ZipArchiveEntry entry in archive.Entries)
+            if (m_romName.Contains(".zip")) {
+                try { 
+                    using (ZipArchive archive = ZipFile.OpenRead(m_romName))
                     {
-                        if (entry.FullName.EndsWith(".nes", StringComparison.OrdinalIgnoreCase))
+                        foreach (ZipArchiveEntry entry in archive.Entries)
                         {
-                            // store FileStream to check current position
-                            using (BinaryReader r = new BinaryReader(entry.Open()))
+                            if (entry.FullName.EndsWith(".nes", StringComparison.OrdinalIgnoreCase))
                             {
-                                err = ReadHead(r);
-                                if (err != Fc_error_code.FC_ERROR_OK)
-                                    return err;
-                                err = ReadRomBody(r);
-                                if (err != Fc_error_code.FC_ERROR_OK)
-                                    return err;
+                                // store FileStream to check current position
+                                using (BinaryReader r = new BinaryReader(entry.Open()))
+                                {
+                                    err = ReadHead(r);
+                                    if (err != Fc_error_code.FC_ERROR_OK)
+                                        return err;
+                                    err = ReadRomBody(r);
+                                    if (err != Fc_error_code.FC_ERROR_OK)
+                                        return err;
+                                }
                             }
                         }
                     }
+                }catch (Exception ex){
+                    return Fc_error_code.FC_ERROR_ILLEGAL_FILE;
                 }
             }
             else
@@ -180,6 +189,7 @@ namespace NesTry
                     }
                 }
             }
+            m_loadromsuccess = true;
             return err;
         }
     }

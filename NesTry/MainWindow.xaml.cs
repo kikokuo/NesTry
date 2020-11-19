@@ -47,7 +47,7 @@ namespace NesTry
             famicom = new Famicom();
 
             //CompositionTarget.Rendering += CompositionTarget_Rendering;
-            UpdateGame();
+            //UpdateGame();
         }
         private void Window_KeyUp(object sender, KeyEventArgs e)
         { 
@@ -109,8 +109,11 @@ namespace NesTry
             if (openFileDialog.ShowDialog() == true)
             {
                 err = famicom.LoadRom(openFileDialog.FileName);
-                if(err == Fc_error_code.FC_ERROR_OK)
-                   famicom.Reset();
+                if (err == Fc_error_code.FC_ERROR_OK)
+                {
+                    famicom.Reset();
+                    UpdateGame();
+                }
                 else
                 {
                     AlertUserError(err);

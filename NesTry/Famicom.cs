@@ -139,6 +139,7 @@ namespace NesTry
             prg_banks.Add(m_PRG3Memory);
             m_PRG4Memory = new byte[8192];
             prg_banks.Add(m_PRG4Memory);
+
             cpu_cycle_count = 0;
             Famicom famicom = this;
             m_ppu = new NesPPU();
@@ -846,29 +847,32 @@ namespace NesTry
         /// <param name="rgba">The RGBA.</param>
         public void main_loop(ref UInt32[] g_data)
         {
-            byte[] buffer = new byte[256*256];
-
-            render_frame_easy(ref buffer);
-            // 生成調色板顏色
-            UInt32[] palette = new UInt32[32]; 
-            
-            for (int i = 0; i != 32; ++i)
-                palette[i] = m_ppu.fc_stdpalette[m_ppu.m_spindexes[i]].data;
-
-            palette[4 * 1] = palette[0];
-            palette[4 * 2] = palette[0];
-            palette[4 * 3] = palette[0];
-            palette[4 * 4] = palette[0];
-            palette[4 * 5] = palette[0];
-            palette[4 * 6] = palette[0];
-            palette[4 * 7] = palette[0];
-            
-            for (uint i = 0; i != 256 * 240; ++i)
+            if (m_nesrom!= null && m_nesrom.m_loadromsuccess)
             {
-                g_data[i] = palette[buffer[i] >> 1];
-            }
+                byte[] buffer = new byte[256 * 256];
 
-            play_audio();
+                render_frame_easy(ref buffer);
+                // 生成調色板顏色
+                UInt32[] palette = new UInt32[32];
+
+                for (int i = 0; i != 32; ++i)
+                    palette[i] = m_ppu.fc_stdpalette[m_ppu.m_spindexes[i]].data;
+
+                palette[4 * 1] = palette[0];
+                palette[4 * 2] = palette[0];
+                palette[4 * 3] = palette[0];
+                palette[4 * 4] = palette[0];
+                palette[4 * 5] = palette[0];
+                palette[4 * 6] = palette[0];
+                palette[4 * 7] = palette[0];
+
+                for (uint i = 0; i != 256 * 240; ++i)
+                {
+                    g_data[i] = palette[buffer[i] >> 1];
+                }
+
+                play_audio();
+            }
         }
         private void play_audio() 
         {
